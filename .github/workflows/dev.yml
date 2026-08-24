@@ -19,3 +19,6 @@ jobs:
           script: |
               cd /home/work/Projects/golang/ideagen
               make git/pull
+              make build/idea
+              sudo systemctl restart ideagen
+              sudo systemctl status ideagen --no-pager
