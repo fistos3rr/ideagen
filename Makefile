@@ -57,3 +57,14 @@ db/migrations/new:
 db/migrations/up: confirm
 	@echo 'Running up migrations...'
 	migrate -path ./migrations -database ${POSTGRES_DB_DSN} up
+
+# ================================================================== #
+# BUILD
+# ================================================================== #
+
+## build/idea: build the cmd/idea application
+.PHONY: build/idea
+build/idea:
+	@echo 'Building cmd/idea...'
+	go build -ldflags='-s' -o=./bin/idea ./cmd/idea
+	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=./bin/linux_amd64/idea ./cmd/idea
