@@ -9,7 +9,7 @@ jobs:
   pull:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH and git pull
+      - name: Run dev server
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -17,6 +17,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT }}
           script: |
+              set -e
               cd /home/work/Projects/golang/ideagen
               make git/pull
               make build/idea

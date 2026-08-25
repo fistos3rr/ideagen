@@ -8,8 +8,9 @@ import (
 
 func (app *application) routes() http.Handler {
 	router := mux.NewRouter()
-	//test health
+	
 	router.HandleFunc("/v1/health", app.healthcheckHandler).Methods("GET")
+	router.HandleFunc("/v1/ask", app.aiHandler).Methods("POST")
 
 	return router
 }

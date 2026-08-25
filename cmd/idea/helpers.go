@@ -27,3 +27,5 @@ func (app *application) writeJSON(
 
 	return nil
 }
+
+// curl -X POST "https://api.groq.com/openai/v1/chat/completions" -H "Content-Type: application/json" -H "Authorization: Bearer $API_KEY_GROQ_IDEAGEN" -d '{"model": "openai/gpt-oss-20b", "messages": [{"role": "user", "content": "what year now?"}]}'
