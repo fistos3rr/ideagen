@@ -1,0 +1,63 @@
+services:
+  # idea service
+  idea:
+    build:
+      context: .
+      dockerfile: Dockerfile.idea
+    ports:
+      - "${IDEA_PORT}:8080"
+    environment:
+      - PORT=8080
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=ideagenuser
+      - DB_PASSWORD=${DB_PASS}
+      - DB_NAME=ideagendb
+      - AI_PROVIDER=${AI_PROVIDER}
+      - AI_API_KEY=${AI_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: on-failure
+    networks:
+      - new
+  
+  db:
+    image: postgres:15-alpine
+    networks:
+      new:
+        aliases:
+          - database
+    environment:
+      POSTGRES_USER: ideagenuser
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ideagendb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ideagenuser -d ideagendb"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+  
+  migrate:
+    image: migrate/migrate
+    networks:
+      - new
+    volumes:
+      - ./migrations:/migrations
+    command: ["-path", "/migrations", "-database", "postgres://ideagenuser:${DB_PASS}@database:5432/ideagendb?sslmode=disable", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    
+networks:
+  new:
+
+volumes:
+  pgdata:

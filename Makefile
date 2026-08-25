@@ -16,11 +16,6 @@ confirm:
 # DEVELOPMENT
 # ================================================================== #
 
-## run/idea: run the idea generator service
-.PHONY: run/idea
-run/idea:
-	go run ./cmd/idea
-
 ## git/merge: merging dev in main
 .PHONY: git/merge
 git/merge: confirm
@@ -38,31 +33,28 @@ git/pull:
 	git pull
 	git checkout dev
 	git fetch origin dev && git reset --hard origin/dev
-
-## db/psl: connect to the database using psql
-.PHONY: db/psql
-db/psql:
-	psql ${POSTGRES_DB_DSN}
-
+	
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
 db/migrations/new:
 	@echo 'Creating migration files for ${name}...'
 	migrate create -seq -ext=.sql -dir=./migrations ${name}
 
-## db/migrations/up: apply all up database migrations
-.PHONY: db/migrations/up
-db/migrations/up: confirm
-	@echo 'Running up migrations...'
-	migrate -path ./migrations -database ${POSTGRES_DB_DSN} up
-
 # ================================================================== #
-# BUILD
+# DOCKER
 # ================================================================== #
 
-## build/idea: build the cmd/idea application
-.PHONY: build/idea
-build/idea:
-	@echo 'Building cmd/idea...'
-	go build -ldflags='-s' -o=./bin/idea ./cmd/idea
-	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=./bin/linux_amd64/idea ./cmd/idea
+## docker/up: up service
+.PHONY: docker/up
+docker/up:
+	docker compose up -d
+
+## docker/down: down service
+.PHONY: docker/down
+docker/down:
+	docker compose down
+
+## docker/clean: clean all data with db data
+.PHONY: docker/clean
+docker/clean:
+	docker compose down -v

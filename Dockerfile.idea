@@ -1,0 +1,26 @@
+# ---- BUILD ----
+FROM golang:1.26-alpine AS builder
+
+WORKDIR /app
+
+# cache dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# source code
+COPY internal/ ./internal/
+COPY cmd/idea/ ./cmd/idea/
+
+# Building
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/idea
+
+# ---- IMAGE ----
+FROM alpine:latest
+
+WORKDIR /root/
+
+COPY --from=builder /app/main .
+
+EXPOSE 8080
+
+CMD ["./main"]

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"errors"
 
@@ -10,7 +9,7 @@ import (
 )
 
 type config struct {
-	port int
+	port string
 	env string
 	aiProviderType string
 }
@@ -24,12 +23,10 @@ type application struct {
 func main() {
 	var cfg config
 
-	flag.IntVar(&cfg.port, "port", 4000, "API server port")
-	flag.StringVar(&cfg.env, "env", "development",
-		"Environment (development|staging|production)")
-	flag.StringVar(&cfg.aiProviderType, "ai", "groq", "AI chat provider")
 
-	flag.Parse()
+	cfg.port = os.Getenv("PORT")
+	cfg.env = "development"
+	cfg.aiProviderType = os.Getenv("AI_PROVIDER")
 
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
@@ -37,7 +34,7 @@ func main() {
 	switch cfg.aiProviderType {
 	case "groq":
 		aicfg := ai.Config{
-			APIKey: os.Getenv("API_KEY_GROQ_IDEAGEN"),
+			APIKey: os.Getenv("AI_API_KEY"),
 			Model: "openai/gpt-oss-20b",
 		}
 		
