@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_name_types ON types USING GIN (to_tsvector('simple', name));

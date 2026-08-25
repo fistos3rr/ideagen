@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_text_prompts ON prompts USING GIN (to_tsvector('simple', text));

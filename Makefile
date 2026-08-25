@@ -39,6 +39,11 @@ git/pull:
 db/migrations/new:
 	@echo 'Creating migration files for ${name}...'
 	migrate create -seq -ext=.sql -dir=./migrations ${name}
+	
+## db/psql: connect to db in docker
+.PHONY: db/psql
+db/psql:
+	psql -h localhost -p 5432 -U ideagenuser -d ideagendb
 
 # ================================================================== #
 # DOCKER
