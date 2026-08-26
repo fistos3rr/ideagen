@@ -26,6 +26,7 @@ type Models struct {
 		GetAll(text string, typeID int64, activeOnly bool, filters Filters) ([]*Prompt, Metadata, error)
 		Delete(id int64) error
 		Update(prompt *Prompt) error
+		GetRandom(typeID int64, limit int, activeOnly bool) ([]*Prompt, error)
 	}
 }
 

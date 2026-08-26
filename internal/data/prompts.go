@@ -92,7 +92,7 @@ func (m PromptModel) GetAll(
 		SELECT count(*) OVER(), p.id, p.text, p.is_active, t.id, t.name, t.is_active
 		FROM prompts p
 		JOIN types t ON p.type_id = t.id
-		WHERE 
+		WHERE
 			(to_tsvector('simple', p.text) @@ plainto_tsquery('simple', $1) OR $1 = '')
 			AND
 			($2 = 0 OR p.type_id = $2)
@@ -211,4 +211,63 @@ func (m PromptModel) Update(prompt *Prompt) error {
 	}
 
 	return nil
+}
+
+func (m PromptModel) GetRandom(
+	typeID int64,
+	limit int,
+	activeOnly bool,
+) ([]*Prompt, error) {
+	query := `
+		SELECT p.id, p.text, p.is_active, t.id, t.name, t.is_active
+		FROM prompts p
+		JOIN types t ON p.type_id = t.id
+		WHERE
+			($1 = 0 OR p.type_id = $1)
+			AND
+			($2 = false OR (p.is_active = $2 AND t.is_active = $2))
+		ORDER BY RANDOM()
+		LIMIT $3
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	args := []any{
+		typeID,
+		activeOnly,
+		limit,
+	}
+
+	rows, err := m.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	prompts := []*Prompt{}
+
+	for rows.Next() {
+		var p Prompt
+		var t Type
+		err := rows.Scan(
+			&p.ID,
+			&p.Text,
+			&p.IsActive,
+			&t.ID,
+			&t.Name,
+			&t.IsActive,
+		)
+		if err != nil {
+			return nil, err
+		}
+		p.Type = t
+		prompts = append(prompts, &p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return prompts, nil
 }
