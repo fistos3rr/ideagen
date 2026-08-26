@@ -4,7 +4,21 @@ import (
 	"encoding/json"
 	"maps"
 	"net/http"
+	"strconv"
+	"errors"
+
+	"github.com/gorilla/mux"
 )
+
+func (app *application) readIDParam(r *http.Request) (int64, error) {
+	params := mux.Vars(r)
+	id, err := strconv.ParseInt(params["id"], 10, 64)
+	if err != nil || id < 1 {
+		return 0, errors.New("invalid id parameter")
+	}
+
+	return id, nil
+}
 
 type envelope map[string]any
 

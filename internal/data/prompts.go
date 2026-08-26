@@ -33,7 +33,7 @@ func (m PromptModel) Insert(p *Prompt) error {
 		Scan(&p.ID)
 }
 
-func (m PromptModel) GetById(id int64) (Prompt, error) {
+func (m PromptModel) GetById(id int64) (*Prompt, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
@@ -65,7 +65,6 @@ func (m PromptModel) GetById(id int64) (Prompt, error) {
 			return nil, err
 		}
 	}
-	s
 	prompt.Type = t
 	
 	return &prompt, nil

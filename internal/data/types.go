@@ -46,7 +46,7 @@ func (m TypeModel) Insert(t *Type) error {
 	return nil
 }
 
-func (m TypeModel) GetById(id int64) (Type, error) {
+func (m TypeModel) GetById(id int64) (*Type, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
