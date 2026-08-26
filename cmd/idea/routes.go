@@ -12,5 +12,10 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/health", app.healthcheckHandler).Methods("GET")
 	router.HandleFunc("/v1/ask", app.aiHandler).Methods("POST")
 
+	router.HandleFunc("/v1/types", app.createTypeHandler).Methods("POST")
+	router.HandleFunc("/v1/types/{id}", app.showTypeHandler).Methods("GET")
+	router.HandleFunc("/v1/types/{id}", app.deleteTypeHandler).Methods("DELETE")
+	router.HandleFunc("/v1/types", app.listTypesHandler).Methods("GET")
+
 	return router
 }

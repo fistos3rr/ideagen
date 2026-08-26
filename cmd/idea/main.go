@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/fistos3rr/ideagen/internal/ai"
@@ -33,6 +34,7 @@ type application struct {
 	logger     *jsonlog.Logger
 	aiProvider ai.Provider
 	models     data.Models
+	wg sync.WaitGroup
 }
 
 func (cfg *config) parseEnv() {

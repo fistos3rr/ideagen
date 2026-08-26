@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/fistos3rr/ideagen/internal/validator"
 )
 
 var (
@@ -15,6 +17,11 @@ var (
 type Type struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+}
+
+func ValidateType(v *validator.Validator, t *Type) {
+	v.Check(t.Name != "", "name", "must be provided")
+	v.Check(len(t.Name) <= 80, "name", "must not be more than 80 bytes long")
 }
 
 type TypeModel struct {
@@ -46,7 +53,7 @@ func (m TypeModel) Insert(t *Type) error {
 	return nil
 }
 
-func (m TypeModel) GetById(id int64) (*Type, error) {
+func (m TypeModel) Get(id int64) (*Type, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
