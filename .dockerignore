@@ -6,3 +6,4 @@ bin/
 Dockerfile
 .env
 .envrc
+*.env

@@ -5,37 +5,31 @@ services:
       context: .
       dockerfile: Dockerfile.idea
     ports:
-      - "${IDEA_PORT}:8080"
+      - "${IDEA_PORT}:${PORT}"
     environment:
-      - PORT=8080
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=ideagenuser
-      - DB_PASSWORD=${DB_PASS}
-      - DB_NAME=ideagendb
-      - AI_PROVIDER=${AI_PROVIDER}
-      - AI_API_KEY=${AI_API_KEY}
+      - PORT=${PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    env_file:
+      - ./app.env
     depends_on:
       db:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
     restart: on-failure
-    networks:
-      - new
   
   db:
     image: postgres:15-alpine
-    networks:
-      new:
-        aliases:
-          - database
     environment:
-      POSTGRES_USER: ideagenuser
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ideagendb
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:${DB_PORT}"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -46,18 +40,13 @@ services:
   
   migrate:
     image: migrate/migrate
-    networks:
-      - new
     volumes:
       - ./migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://ideagenuser:${DB_PASS}@database:5432/ideagendb?sslmode=disable", "up"]
+    command: ["-path", "/migrations", "-database", "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable", "up"]
     depends_on:
       db:
         condition: service_healthy
     restart: "no"
-    
-networks:
-  new:
 
 volumes:
   pgdata:

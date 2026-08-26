@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"time"
 	"context"
+	"fmt"
 
 	"github.com/fistos3rr/ideagen/internal/jsonlog"
 	"github.com/fistos3rr/ideagen/internal/ai"
@@ -47,8 +48,14 @@ func (cfg *config) parseEnv() {
 		aiProviderType = "groq"
 	}
 
-	strVal = os.Getenv("DB_DSN")
-	dsn := strVal
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASSWORD")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+	
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		dbUser, dbPass, dbHost, dbPort, dbName)
 
 	strVal = os.Getenv("DB_MAX_OPEN_CONNS")
 	maxOpenConns, err := strconv.Atoi(strVal)
