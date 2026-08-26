@@ -178,3 +178,37 @@ func (m PromptModel) Delete(id int64) error {
 
 	return nil
 }
+
+func (m PromptModel) Update(prompt *Prompt) error {
+	query := `
+		UPDATE prompts
+		SET type_id = $1, text = $2, is_active = $3
+		WHERE id = $4
+	`
+
+	args := []any{
+		prompt.Type.ID,
+		prompt.Text,
+		prompt.IsActive,
+		prompt.ID,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrEditConflict
+	}
+
+	return nil
+}

@@ -172,3 +172,36 @@ func (m TypeModel) Delete(id int64) error {
 
 	return nil
 }
+
+func (m TypeModel) Update(t *Type) error {
+	query := `
+		UPDATE types
+		SET name = $1, is_active = $2
+		WHERE id = $3
+	`
+	
+	args := []any{
+		t.Name,
+		t.IsActive,
+		t.ID,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := m.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrEditConflict
+	}
+
+	return nil
+}

@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	ErrRecordNotFound = errors.New("record not found")
-	ErrEditConflict   = errors.New("edit conflict")
+	ErrRecordNotFound      = errors.New("record not found")
+	ErrEditConflict        = errors.New("edit conflict")
 	ErrForeignKeyViolation = errors.New("foreign key violation")
 )
 
@@ -17,12 +17,14 @@ type Models struct {
 		Get(id int64) (*Type, error)
 		GetAll(name string, activeOnly bool, filters Filters) ([]*Type, Metadata, error)
 		Delete(id int64) error
+		Update(t *Type) error
 	}
 	Prompts interface {
 		Insert(p *Prompt) error
 		Get(id int64) (*Prompt, error)
 		GetAll(text string, typeID int64, activeOnly bool, filters Filters) ([]*Prompt, Metadata, error)
 		Delete(id int64) error
+		Update(prompt *Prompt) error
 	}
 }
 

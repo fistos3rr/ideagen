@@ -35,8 +35,8 @@ func (app *application) showTypeHandler(w http.ResponseWriter, r *http.Request) 
 
 func (app *application) createTypeHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Name string `json:"name"`
-		IsActive *bool `json:"is_active"`
+		Name     string `json:"name"`
+		IsActive *bool  `json:"is_active"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -111,14 +111,14 @@ func (app *application) deleteTypeHandler(w http.ResponseWriter, r *http.Request
 
 func (app *application) listTypesHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Name string
+		Name       string
 		ActiveOnly bool
 		data.Filters
 	}
 
 	v := validator.New()
 	qs := r.URL.Query()
-	
+
 	input.Name = app.readString(qs, "name", "")
 	input.ActiveOnly = app.readBool(qs, "active_only", v)
 	input.Page = app.readInt(qs, "page", 1, v)
@@ -138,6 +138,66 @@ func (app *application) listTypesHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	err = app.writeJSON(w, http.StatusOK, envelope{"types": types, "metadata": metadata}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) updateTypeHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	t, err := app.models.Types.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	var input struct {
+		Name     *string `json:"name"`
+		IsActive *bool   `json:"is_active"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if input.Name != nil {
+		t.Name = *input.Name
+	}
+	if input.IsActive != nil {
+		t.IsActive = *input.IsActive
+	}
+
+	v := validator.New()
+
+	if data.ValidateType(v, t); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Types.Update(t)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"type": t}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
