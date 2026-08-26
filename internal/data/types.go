@@ -146,6 +146,9 @@ func (m TypeModel) Delete(id int64) error {
 
 	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
+		if isForeignKeyViolation(err) {
+			return ErrForeignKeyViolation
+		}
 		return err
 	}
 

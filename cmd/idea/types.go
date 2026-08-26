@@ -80,6 +80,8 @@ func (app *application) deleteTypeHandler(w http.ResponseWriter, r *http.Request
 	err = app.models.Types.Delete(id)
 	if err != nil {
 		switch {
+		case errors.Is(err, data.ErrForeignKeyViolation):
+			app.badRequestResponse(w, r, err)
 		case errors.Is(err, data.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:

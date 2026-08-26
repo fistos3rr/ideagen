@@ -8,6 +8,7 @@ import (
 var (
 	ErrRecordNotFound = errors.New("record not found")
 	ErrEditConflict   = errors.New("edit conflict")
+	ErrForeignKeyViolation = errors.New("foreign key violation")
 )
 
 type Models struct {
