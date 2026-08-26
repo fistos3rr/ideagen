@@ -4,7 +4,7 @@ import "context"
 
 type Config struct {
 	APIKey string
-	Model string
+	Model  string
 }
 
 type Provider interface {

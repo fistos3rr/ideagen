@@ -3,14 +3,14 @@ package data
 import (
 	"context"
 	"database/sql"
-	"time"
-	"fmt"
 	"errors"
+	"fmt"
+	"time"
 )
 
 type Prompt struct {
-	ID int64 `json:"id"`
-	Type Type `json:"type"`
+	ID   int64  `json:"id"`
+	Type Type   `json:"type"`
 	Text string `json:"text"`
 }
 
@@ -26,7 +26,7 @@ func (m PromptModel) Insert(p *Prompt) error {
 	`
 
 	args := []any{p.Type.ID, p.Text}
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -38,20 +38,20 @@ func (m PromptModel) GetById(id int64) (*Prompt, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
-	
+
 	query := `
 		SELECT p.id, p.text, t.id, t.name
 		FROM prompts p
 		JOIN types t ON p.type_id = t.id
 		WHERE p.id = $1
 	`
-	
+
 	var prompt Prompt
 	var t Type
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&prompt.ID,
 		&prompt.Text,
@@ -67,7 +67,7 @@ func (m PromptModel) GetById(id int64) (*Prompt, error) {
 		}
 	}
 	prompt.Type = t
-	
+
 	return &prompt, nil
 }
 
@@ -86,23 +86,23 @@ func (m PromptModel) GetAll(
 			(to_tsvector('simple', t.name) @@ plainto_tsquery('simple', $2) OR $2 = '')
 		ORDER BY %s %s, p.id ASC
 		LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	args := []any{
 		text,
 		typeName,
 		filters.limit(),
 		filters.offset(),
 	}
-	
+
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, Metadata{}, err
 	}
 	defer rows.Close()
-	
+
 	totalRecords := 0
 	prompts := []*Prompt{}
 
@@ -136,20 +136,20 @@ func (m PromptModel) Delete(id int64) error {
 	if id < 1 {
 		return ErrRecordNotFound
 	}
-	
+
 	query := `
 		DELETE FROM prompts
 		WHERE id = $1
 	`
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err

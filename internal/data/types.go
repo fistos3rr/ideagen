@@ -1,11 +1,11 @@
 package data
 
 import (
-	"database/sql"
 	"context"
-	"time"
-	"fmt"
+	"database/sql"
 	"errors"
+	"fmt"
+	"time"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 )
 
 type Type struct {
-	ID int64 `json:"id"`
+	ID   int64  `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -50,18 +50,18 @@ func (m TypeModel) GetById(id int64) (*Type, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
 	}
-	
+
 	query := `
 		SELECT id, name
 		FROM types
 		WHERE id = $1
 	`
-	
+
 	var t Type
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(&t.ID, &t.Name)
 	if err != nil {
 		switch {
@@ -71,7 +71,7 @@ func (m TypeModel) GetById(id int64) (*Type, error) {
 			return nil, err
 		}
 	}
-	
+
 	return &t, nil
 }
 
@@ -83,22 +83,22 @@ func (m TypeModel) GetAll(
 		SELECT count(*) OVER(), id, name FROM types WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')
 		ORDER BY %s %s, id ASC
 		LIMIT $2 OFFSET $3`, filters.sortColumn(), filters.sortDirection())
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	args := []any{
 		name,
 		filters.limit(),
 		filters.offset(),
 	}
-	
+
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, Metadata{}, err
 	}
 	defer rows.Close()
-	
+
 	totalRecords := 0
 	types := []*Type{}
 
@@ -128,20 +128,20 @@ func (m TypeModel) Delete(id int64) error {
 	if id < 1 {
 		return ErrRecordNotFound
 	}
-	
+
 	query := `
 		DELETE FROM types
 		WHERE id = $1
 	`
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err

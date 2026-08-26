@@ -10,7 +10,7 @@ func (app *application) healthcheckHandler(
 ) {
 	env := envelope{
 		"status": "available",
-		"env": app.config.env,
+		"env":    app.config.env,
 	}
 
 	err := app.writeJSON(w, http.StatusOK, env, nil)

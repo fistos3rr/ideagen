@@ -1,38 +1,38 @@
 package main
 
 import (
-	"os"
-	"errors"
-	"strconv"
-	"database/sql"
-	"time"
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
 
-	"github.com/fistos3rr/ideagen/internal/jsonlog"
 	"github.com/fistos3rr/ideagen/internal/ai"
 	"github.com/fistos3rr/ideagen/internal/data"
+	"github.com/fistos3rr/ideagen/internal/jsonlog"
 
 	_ "github.com/lib/pq"
 )
 
 type config struct {
-	port int
-	env string
+	port           int
+	env            string
 	aiProviderType string
-	db struct {
-		dsn string
+	db             struct {
+		dsn          string
 		maxOpenConns int
 		maxIdleConns int
-		maxIdleTime string
+		maxIdleTime  string
 	}
 }
 
 type application struct {
-	config config
-	logger *jsonlog.Logger
+	config     config
+	logger     *jsonlog.Logger
 	aiProvider ai.Provider
-	models data.Models
+	models     data.Models
 }
 
 func (cfg *config) parseEnv() {
@@ -53,7 +53,7 @@ func (cfg *config) parseEnv() {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
-	
+
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		dbUser, dbPass, dbHost, dbPort, dbName)
 
@@ -125,18 +125,18 @@ func main() {
 	case "groq":
 		aicfg := ai.Config{
 			APIKey: os.Getenv("AI_API_KEY"),
-			Model: "openai/gpt-oss-20b",
+			Model:  "openai/gpt-oss-20b",
 		}
-		
+
 		logData := map[string]string{
-			
+
 			"model": aicfg.Model,
 		}
-		
+
 		if cfg.env == "development" {
 			logData["api_key"] = aicfg.APIKey
 		}
-		
+
 		logger.PrintInfo("running groq ai provider", logData)
 		provider = ai.NewGroqClient(aicfg)
 	default:
@@ -154,10 +154,10 @@ func main() {
 	logger.PrintInfo("database connection pool established", nil)
 
 	app := &application{
-		config: cfg,
-		logger: logger,
+		config:     cfg,
+		logger:     logger,
 		aiProvider: provider,
-		models: data.NewModels(db),
+		models:     data.NewModels(db),
 	}
 
 	err = app.serve()
