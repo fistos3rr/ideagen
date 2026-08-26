@@ -37,6 +37,7 @@ func (app *application) createPromptHandler(w http.ResponseWriter, r *http.Reque
 	var input struct {
 		TypeID int64 `json:"type_id"`
 		Text string `json:"text"`
+		IsActive *bool `json:"is_active"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -60,6 +61,12 @@ func (app *application) createPromptHandler(w http.ResponseWriter, r *http.Reque
 	prompt := &data.Prompt{
 		Type: *typeObj,
 		Text: input.Text,
+	}
+
+	if input.IsActive == nil {
+		prompt.IsActive = true
+	} else {
+		prompt.IsActive = *input.IsActive
 	}
 
 	v := validator.New()
@@ -111,6 +118,7 @@ func (app *application) listPromptsHandler(w http.ResponseWriter, r *http.Reques
 	var input struct {
 		Text string
 		TypeID int64
+		ActiveOnly bool
 		data.Filters
 	}
 
@@ -119,6 +127,7 @@ func (app *application) listPromptsHandler(w http.ResponseWriter, r *http.Reques
 	
 	input.Text = app.readString(qs, "text", "")
 	input.TypeID = int64(app.readInt(qs, "type_id", 0, v))
+	input.ActiveOnly = app.readBool(qs, "active_only", v)
 	input.Page = app.readInt(qs, "page", 1, v)
 	input.PageSize = app.readInt(qs, "page_size", 20, v)
 	input.Sort = app.readString(qs, "sort", "id")
@@ -129,7 +138,7 @@ func (app *application) listPromptsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	prompts, metadata, err := app.models.Prompts.GetAll(input.Text, input.TypeID, input.Filters)
+	prompts, metadata, err := app.models.Prompts.GetAll(input.Text, input.TypeID, input.ActiveOnly, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

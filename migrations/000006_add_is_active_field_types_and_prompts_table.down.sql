@@ -1,0 +1,2 @@
+ALTER TABLE types DROP COLUMN IF EXISTS is_active;
+ALTER TABLE prompts DROP COLUMN IF EXISTS is_active;

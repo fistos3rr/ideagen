@@ -15,13 +15,13 @@ type Models struct {
 	Types interface {
 		Insert(t *Type) error
 		Get(id int64) (*Type, error)
-		GetAll(name string, filters Filters) ([]*Type, Metadata, error)
+		GetAll(name string, activeOnly bool, filters Filters) ([]*Type, Metadata, error)
 		Delete(id int64) error
 	}
 	Prompts interface {
 		Insert(p *Prompt) error
 		Get(id int64) (*Prompt, error)
-		GetAll(text string, typeID int64, filters Filters) ([]*Prompt, Metadata, error)
+		GetAll(text string, typeID int64, activeOnly bool, filters Filters) ([]*Prompt, Metadata, error)
 		Delete(id int64) error
 	}
 }

@@ -36,6 +36,7 @@ func (app *application) showTypeHandler(w http.ResponseWriter, r *http.Request) 
 func (app *application) createTypeHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name string `json:"name"`
+		IsActive *bool `json:"is_active"`
 	}
 
 	err := app.readJSON(w, r, &input)
@@ -48,6 +49,12 @@ func (app *application) createTypeHandler(w http.ResponseWriter, r *http.Request
 		Name: input.Name,
 	}
 
+	if input.IsActive == nil {
+		t.IsActive = true
+	} else {
+		t.IsActive = *input.IsActive
+	}
+
 	v := validator.New()
 
 	if data.ValidateType(v, t); !v.Valid() {
@@ -57,7 +64,13 @@ func (app *application) createTypeHandler(w http.ResponseWriter, r *http.Request
 
 	err = app.models.Types.Insert(t)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrDuplicateType):
+			v.AddError("name", "a type with this name already exists")
+			app.failedValidationResponse(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 
@@ -99,6 +112,7 @@ func (app *application) deleteTypeHandler(w http.ResponseWriter, r *http.Request
 func (app *application) listTypesHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name string
+		ActiveOnly bool
 		data.Filters
 	}
 
@@ -106,6 +120,7 @@ func (app *application) listTypesHandler(w http.ResponseWriter, r *http.Request)
 	qs := r.URL.Query()
 	
 	input.Name = app.readString(qs, "name", "")
+	input.ActiveOnly = app.readBool(qs, "active_only", v)
 	input.Page = app.readInt(qs, "page", 1, v)
 	input.PageSize = app.readInt(qs, "page_size", 20, v)
 	input.Sort = app.readString(qs, "sort", "id")
@@ -116,7 +131,7 @@ func (app *application) listTypesHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	types, metadata, err := app.models.Types.GetAll(input.Name, input.Filters)
+	types, metadata, err := app.models.Types.GetAll(input.Name, input.ActiveOnly, input.Filters)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

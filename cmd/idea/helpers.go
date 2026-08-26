@@ -153,6 +153,29 @@ func (app *application) readInt(
 	return i
 }
 
+// readBool() func reads str val from the query str,
+// then converts it to boolean,
+// if no matching keys could be found, it returns false
+func (app *application) readBool(
+	qs url.Values,
+	key string,
+	v *validator.Validator,
+) bool {
+	s := qs.Get(key)
+
+	if s == "" {
+		return false
+	}
+
+	b, err := strconv.ParseBool(s)
+	if err != nil {
+		v.AddError(key, "must be a boolean value")
+		return false
+	}
+
+	return b
+}
+
 // background() func accepts function as a parameter
 // recovers it from panic
 

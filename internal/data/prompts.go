@@ -14,6 +14,7 @@ type Prompt struct {
 	ID   int64  `json:"id"`
 	Type Type   `json:"type"`
 	Text string `json:"text"`
+	IsActive bool `json:"is_active"`
 }
 
 func ValidatePrompt(v *validator.Validator, prompt *Prompt) {
@@ -28,12 +29,12 @@ type PromptModel struct {
 
 func (m PromptModel) Insert(p *Prompt) error {
 	query := `
-		INSERT INTO prompts (type_id, text)
-		VALUES ($1, $2)
+		INSERT INTO prompts (type_id, text, is_active)
+		VALUES ($1, $2, $3)
 		RETURNING id
 	`
 
-	args := []any{p.Type.ID, p.Text}
+	args := []any{p.Type.ID, p.Text, p.IsActive}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -48,7 +49,7 @@ func (m PromptModel) Get(id int64) (*Prompt, error) {
 	}
 
 	query := `
-		SELECT p.id, p.text, t.id, t.name
+		SELECT p.id, p.text, p.is_active, t.id, t.name, t.is_active
 		FROM prompts p
 		JOIN types t ON p.type_id = t.id
 		WHERE p.id = $1
@@ -63,8 +64,10 @@ func (m PromptModel) Get(id int64) (*Prompt, error) {
 	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&prompt.ID,
 		&prompt.Text,
+		&prompt.IsActive,
 		&t.ID,
 		&t.Name,
+		&t.IsActive,
 	)
 	if err != nil {
 		switch {
@@ -82,18 +85,21 @@ func (m PromptModel) Get(id int64) (*Prompt, error) {
 func (m PromptModel) GetAll(
 	text string,
 	typeID int64,
+	activeOnly bool,
 	filters Filters,
 ) ([]*Prompt, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT count(*) OVER(), p.id, p.text, t.id, t.name
+		SELECT count(*) OVER(), p.id, p.text, p.is_active, t.id, t.name, t.is_active
 		FROM prompts p
 		JOIN types t ON p.type_id = t.id
 		WHERE 
 			(to_tsvector('simple', p.text) @@ plainto_tsquery('simple', $1) OR $1 = '')
 			AND
 			($2 = 0 OR p.type_id = $2)
+			AND
+			($3 = false OR (p.is_active = $3 AND t.is_active = $3))
 		ORDER BY p.%s %s, p.id ASC
-		LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
+		LIMIT $4 OFFSET $5`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -101,6 +107,7 @@ func (m PromptModel) GetAll(
 	args := []any{
 		text,
 		typeID,
+		activeOnly,
 		filters.limit(),
 		filters.offset(),
 	}
@@ -121,8 +128,10 @@ func (m PromptModel) GetAll(
 			&totalRecords,
 			&p.ID,
 			&p.Text,
+			&p.IsActive,
 			&t.ID,
 			&t.Name,
+			&t.IsActive,
 		)
 		if err != nil {
 			return nil, Metadata{}, err

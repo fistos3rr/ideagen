@@ -17,6 +17,7 @@ var (
 type Type struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+	IsActive bool `json:"is_active"`
 }
 
 func ValidateType(v *validator.Validator, t *Type) {
@@ -30,12 +31,12 @@ type TypeModel struct {
 
 func (m TypeModel) Insert(t *Type) error {
 	query := `
-		INSERT INTO types (name)
-		VALUES ($1)
+		INSERT INTO types (name, is_active)
+		VALUES ($1, $2)
 		RETURNING id
 	`
 
-	args := []any{t.Name}
+	args := []any{t.Name, t.IsActive}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -43,7 +44,7 @@ func (m TypeModel) Insert(t *Type) error {
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&t.ID)
 	if err != nil {
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "types_name_key"`:
+		case err.Error() == `pq: duplicate key value violates unique constraint "types_name_key" (23505)`:
 			return ErrDuplicateType
 		default:
 			return err
@@ -59,7 +60,7 @@ func (m TypeModel) Get(id int64) (*Type, error) {
 	}
 
 	query := `
-		SELECT id, name
+		SELECT id, name, is_active
 		FROM types
 		WHERE id = $1
 	`
@@ -69,7 +70,7 @@ func (m TypeModel) Get(id int64) (*Type, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := m.DB.QueryRowContext(ctx, query, id).Scan(&t.ID, &t.Name)
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(&t.ID, &t.Name, &t.IsActive)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -84,18 +85,25 @@ func (m TypeModel) Get(id int64) (*Type, error) {
 
 func (m TypeModel) GetAll(
 	name string,
+	activeOnly bool,
 	filters Filters,
 ) ([]*Type, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT count(*) OVER(), id, name FROM types WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')
+		SELECT count(*) OVER(), id, name, is_active 
+		FROM types 
+		WHERE 
+			(to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')
+			AND
+			($2 = false OR is_active = $2)
 		ORDER BY %s %s, id ASC
-		LIMIT $2 OFFSET $3`, filters.sortColumn(), filters.sortDirection())
+		LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	args := []any{
 		name,
+		activeOnly,
 		filters.limit(),
 		filters.offset(),
 	}
@@ -115,6 +123,7 @@ func (m TypeModel) GetAll(
 			&totalRecords,
 			&t.ID,
 			&t.Name,
+			&t.IsActive,
 		)
 		if err != nil {
 			return nil, Metadata{}, err
