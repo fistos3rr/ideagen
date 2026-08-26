@@ -20,7 +20,7 @@ type Models struct {
 	Prompts interface {
 		Insert(p *Prompt) error
 		Get(id int64) (*Prompt, error)
-		GetAll(text string, typeName string, filters Filters) ([]*Prompt, Metadata, error)
+		GetAll(text string, typeID int64, filters Filters) ([]*Prompt, Metadata, error)
 		Delete(id int64) error
 	}
 }

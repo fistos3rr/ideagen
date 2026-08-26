@@ -6,12 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/fistos3rr/ideagen/internal/validator"
 )
 
 type Prompt struct {
 	ID   int64  `json:"id"`
 	Type Type   `json:"type"`
 	Text string `json:"text"`
+}
+
+func ValidatePrompt(v *validator.Validator, prompt *Prompt) {
+	v.Check(prompt.Text != "", "text", "must be provided")
+	v.Check(len(prompt.Text) <= 5000, "text", "must not be more than 5000 bytes long")
+	v.Check(prompt.Type.ID > 0, "type_id", "must be a valid type")
 }
 
 type PromptModel struct {
@@ -73,7 +81,7 @@ func (m PromptModel) Get(id int64) (*Prompt, error) {
 
 func (m PromptModel) GetAll(
 	text string,
-	typeName string,
+	typeID int64,
 	filters Filters,
 ) ([]*Prompt, Metadata, error) {
 	query := fmt.Sprintf(`
@@ -83,8 +91,8 @@ func (m PromptModel) GetAll(
 		WHERE 
 			(to_tsvector('simple', p.text) @@ plainto_tsquery('simple', $1) OR $1 = '')
 			AND
-			(to_tsvector('simple', t.name) @@ plainto_tsquery('simple', $2) OR $2 = '')
-		ORDER BY %s %s, p.id ASC
+			($2 = 0 OR p.type_id = $2)
+		ORDER BY p.%s %s, p.id ASC
 		LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -92,7 +100,7 @@ func (m PromptModel) GetAll(
 
 	args := []any{
 		text,
-		typeName,
+		typeID,
 		filters.limit(),
 		filters.offset(),
 	}
