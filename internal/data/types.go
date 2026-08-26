@@ -15,9 +15,9 @@ var (
 )
 
 type Type struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	IsActive bool `json:"is_active"`
+	ID       int64  `json:"id"`
+	Name     string `json:"name"`
+	IsActive bool   `json:"is_active"`
 }
 
 func ValidateType(v *validator.Validator, t *Type) {
@@ -179,7 +179,7 @@ func (m TypeModel) Update(t *Type) error {
 		SET name = $1, is_active = $2
 		WHERE id = $3
 	`
-	
+
 	args := []any{
 		t.Name,
 		t.IsActive,

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"io"
 
 	"github.com/fistos3rr/ideagen/internal/validator"
 
@@ -109,7 +109,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 // readString() func returns a string value from the query string
 func (app *application) readString(qs url.Values, key string, defaultValue string) string {
 	s := qs.Get(key)
-	
+
 	if s == "" {
 		return defaultValue
 	}

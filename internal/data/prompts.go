@@ -11,10 +11,10 @@ import (
 )
 
 type Prompt struct {
-	ID   int64  `json:"id"`
-	Type Type   `json:"type"`
-	Text string `json:"text"`
-	IsActive bool `json:"is_active"`
+	ID       int64  `json:"id"`
+	Type     Type   `json:"type"`
+	Text     string `json:"text"`
+	IsActive bool   `json:"is_active"`
 }
 
 func ValidatePrompt(v *validator.Validator, prompt *Prompt) {

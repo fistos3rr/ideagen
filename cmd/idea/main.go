@@ -34,7 +34,7 @@ type application struct {
 	logger     *jsonlog.Logger
 	aiProvider ai.Provider
 	models     data.Models
-	wg sync.WaitGroup
+	wg         sync.WaitGroup
 }
 
 func (cfg *config) parseEnv() {

@@ -22,6 +22,7 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/prompts/{id}", app.showPromptHandler).Methods("GET")
 	router.HandleFunc("/v1/prompts/{id}", app.deletePromptHandler).Methods("DELETE")
 	router.HandleFunc("/v1/prompts", app.listPromptsHandler).Methods("GET")
+	router.HandleFunc("/v1/prompts/{id}", app.updatePromptHandler).Methods("UPDATE")
 
 	return router
 }
