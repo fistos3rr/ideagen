@@ -3,8 +3,9 @@ package data
 import (
 	"context"
 	"database/sql"
-
-	"github.com/lib/pq"
+	"time"
+	"fmt"
+	"errors"
 )
 
 type Prompt struct {
@@ -38,7 +39,7 @@ func (m PromptModel) GetById(id int64) (*Prompt, error) {
 		return nil, ErrRecordNotFound
 	}
 	
-	query = `
+	query := `
 		SELECT p.id, p.text, t.id, t.name
 		FROM prompts p
 		JOIN types t ON p.type_id = t.id
@@ -131,7 +132,7 @@ func (m PromptModel) GetAll(
 	return prompts, metadata, nil
 }
 
-func (m *PromptModel) Delete(id int64) error {
+func (m PromptModel) Delete(id int64) error {
 	if id < 1 {
 		return ErrRecordNotFound
 	}

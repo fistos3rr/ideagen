@@ -49,6 +49,11 @@ db/psql:
 # DOCKER
 # ================================================================== #
 
+## docker/rebuild: rebuild service
+.PHONY: docker/rebuild
+docker/rebuild:
+	docker compose up -d --build
+
 ## docker/up: up service
 .PHONY: docker/up
 docker/up:

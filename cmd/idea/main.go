@@ -34,39 +34,46 @@ type application struct {
 	models data.Models
 }
 
-func (cfg *Config) parseEnv() {
+func (cfg *config) parseEnv() {
 	strVal := os.Getenv("PORT")
-	cfg.port, err := strconv.Atoi(strVal)
+	port, err := strconv.Atoi(strVal)
 	if err != nil {
 		port = 8080
 	}
 
 	strVal = os.Getenv("AI_PROVIDER")
-	cfg.aiProviderType = strVal
-	if cfg.aiProviderType == "" {
-		cfg.aiProviderType = "groq"
+	aiProviderType := strVal
+	if aiProviderType == "" {
+		aiProviderType = "groq"
 	}
 
 	strVal = os.Getenv("DB_DSN")
-	cfg.db.dsn = strVal
+	dsn := strVal
 
 	strVal = os.Getenv("DB_MAX_OPEN_CONNS")
-	cfg.db.maxOpenConns, err := strconv.Atoi(strVal)
+	maxOpenConns, err := strconv.Atoi(strVal)
 	if err != nil {
-		cfg.db.maxOpenConns = 25
+		maxOpenConns = 25
 	}
 
 	strVal = os.Getenv("DB_MAX_IDLE_CONNS")
-	cfg.db.maxIdleConns, err = strconv.Atoi(strVal)
+	maxIdleConns, err := strconv.Atoi(strVal)
 	if err != nil {
-		cfg.db.maxIdleConns = 25
+		maxIdleConns = 25
 	}
 
 	strVal = os.Getenv("DB_MAX_IDLE_TIME")
-	cfg.db.maxIdleTime = strVal
-	if cfg.db.maxIdleTime == "" {
-		cfg.db.maxIdleTime = "15m"
+	maxIdleTime := strVal
+	if maxIdleTime == "" {
+		maxIdleTime = "15m"
 	}
+
+	cfg.port = port
+	cfg.aiProviderType = aiProviderType
+	cfg.db.dsn = dsn
+	cfg.db.maxOpenConns = maxOpenConns
+	cfg.db.maxIdleConns = maxIdleConns
+	cfg.db.maxIdleTime = maxIdleTime
 }
 
 func openDB(cfg config) (*sql.DB, error) {
@@ -101,6 +108,10 @@ func main() {
 	var cfg config
 	cfg.parseEnv()
 	cfg.env = "development"
+
+	logger.PrintInfo("database config", map[string]string{
+		"dsn": cfg.db.dsn,
+	})
 
 	var provider ai.Provider
 	switch cfg.aiProviderType {
@@ -142,7 +153,7 @@ func main() {
 		models: data.NewModels(db),
 	}
 
-	err := app.serve()
+	err = app.serve()
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}

@@ -124,7 +124,7 @@ func (m TypeModel) GetAll(
 	return types, metadata, nil
 }
 
-func (m *TypeModel) Delete(id int64) error {
+func (m TypeModel) Delete(id int64) error {
 	if id < 1 {
 		return ErrRecordNotFound
 	}
