@@ -89,9 +89,9 @@ func (m TypeModel) GetAll(
 	filters Filters,
 ) ([]*Type, Metadata, error) {
 	query := fmt.Sprintf(`
-		SELECT count(*) OVER(), id, name, is_active 
-		FROM types 
-		WHERE 
+		SELECT count(*) OVER(), id, name, is_active
+		FROM types
+		WHERE
 			(to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 = '')
 			AND
 			($2 = false OR is_active = $2)
@@ -204,4 +204,52 @@ func (m TypeModel) Update(t *Type) error {
 	}
 
 	return nil
+}
+
+func (m TypeModel) GetRandom(
+	limit int,
+	activeOnly bool,
+) ([]*Type, error) {
+	query := `
+		SELECT id, name, is_active
+		FROM types
+		WHERE ($1 = false OR is_active = $1)
+		ORDER BY RANDOM()
+		LIMIT $2
+		`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	args := []any{
+		activeOnly,
+		limit,
+	}
+
+	rows, err := m.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	types := []*Type{}
+
+	for rows.Next() {
+		var t Type
+		err := rows.Scan(
+			&t.ID,
+			&t.Name,
+			&t.IsActive,
+		)
+		if err != nil {
+			return nil, err
+		}
+		types = append(types, &t)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return types, nil
 }

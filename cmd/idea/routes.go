@@ -24,5 +24,7 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/prompts", app.listPromptsHandler).Methods("GET")
 	router.HandleFunc("/v1/prompts/{id}", app.updatePromptHandler).Methods("UPDATE")
 
+	router.HandleFunc("/v1/random/types", app.randomTypesHandler).Methods("GET")
+
 	return router
 }

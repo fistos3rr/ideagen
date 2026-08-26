@@ -18,6 +18,7 @@ type Models struct {
 		GetAll(name string, activeOnly bool, filters Filters) ([]*Type, Metadata, error)
 		Delete(id int64) error
 		Update(t *Type) error
+		GetRandom(limit int, activeOnly bool) ([]*Type, error)
 	}
 	Prompts interface {
 		Insert(p *Prompt) error
