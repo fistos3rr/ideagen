@@ -29,6 +29,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandleFunc("/v1/generate/meta-prompt", app.generateMetaPromptHandler).Methods("POST")
 	router.HandleFunc("/v1/generate/prompt", app.generatePromptHandler).Methods("POST")
+	router.HandleFunc("/v1/generate/idea", app.generateIdeaHandler).Methods("POST")
 
 	return router
 }

@@ -3,10 +3,69 @@ package main
 import (
 	"net/http"
 	"errors"
+	"fmt"
 
 	"github.com/fistos3rr/ideagen/internal/validator"
 	"github.com/fistos3rr/ideagen/internal/data"
+	"github.com/luxfi/go-bip39"
 )
+
+func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TypeID int64 `json:"type_id"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	typeObj, err := app.models.Types.Get(input.TypeID)
+	if err != nil {
+		if errors.Is(err, data.ErrRecordNotFound) {
+			v := validator.New()
+			v.AddError("type_id", "type with this id does not exist")
+			app.failedValidationResponse(w, r, v.Errors)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	
+	metaPrompt := app.metaGenerator.GenerateMetaPrompt(typeObj.Name)
+
+	prompt, err := app.aiProvider.SendMessage(r.Context(), metaPrompt, 1.0, 1.0)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	entropy, err := bip39.NewEntropy(128)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	prescript := fmt.Sprintf("Use this phrase for reflection:%s\n", mnemonic)
+
+	idea, err := app.aiProvider.SendMessage(r.Context(), prescript+prompt, 1.0, 1.0)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"meta_prompt": metaPrompt,"prompt": prompt, "idea": idea}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
 
 func (app *application) generatePromptHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
