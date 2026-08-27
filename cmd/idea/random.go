@@ -39,7 +39,7 @@ func (app *application) generatePromptHandler(w http.ResponseWriter, r *http.Req
 		app.serverErrorResponse(w, r, err)
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"prompt": prompt}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"meta_prompt": metaPrompt,"prompt": prompt}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
