@@ -9,5 +9,5 @@ type Config struct {
 }
 
 type Provider interface {
-	SendMessage(ctx context.Context, message string) (string, error)
+	SendMessage(ctx context.Context, message string, temperature float64) (string, error)
 }

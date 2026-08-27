@@ -24,6 +24,7 @@ func NewGroqClient(cfg Config) *GroqClient {
 type groqRequest struct {
 	Model    string        `json:"model"`
 	Messages []groqMessage `json:"messages"`
+	Temperature float64 `json:"temperature"`
 }
 
 type groqMessage struct {
@@ -39,12 +40,13 @@ type groqResponse struct {
 	} `json:"choices"`
 }
 
-func (c *GroqClient) SendMessage(ctx context.Context, message string) (string, error) {
+func (c *GroqClient) SendMessage(ctx context.Context, message string, temperature float64) (string, error) {
 	reqBody := groqRequest{
 		Model: c.cfg.Model,
 		Messages: []groqMessage{
 			{Role: "user", Content: message},
 		},
+		Temperature: temperature,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
