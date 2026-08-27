@@ -20,6 +20,6 @@ jobs:
               set -e
               cd /home/work/Projects/golang/ideagen
               make git/pull
-              make docker/rebuild
+              #make docker/rebuild
               #sudo systemctl restart ideagen
               #sudo systemctl status ideagen --no-pager

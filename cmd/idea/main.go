@@ -13,6 +13,7 @@ import (
 	"github.com/fistos3rr/ideagen/internal/ai"
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/jsonlog"
+	"github.com/fistos3rr/ideagen/internal/metaprompt"
 
 	_ "github.com/lib/pq"
 )
@@ -35,6 +36,7 @@ type application struct {
 	aiProvider ai.Provider
 	models     data.Models
 	wg         sync.WaitGroup
+	metaGenerator *metaprompt.MetaPromptGenerator
 }
 
 func (cfg *config) parseEnv() {
@@ -160,6 +162,7 @@ func main() {
 		logger:     logger,
 		aiProvider: provider,
 		models:     data.NewModels(db),
+		metaGenerator: metaprompt.NewMetaPromptGenerator(),
 	}
 
 	err = app.serve()

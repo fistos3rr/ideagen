@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+
 func (app *application) aiHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Message string `json:"message"`

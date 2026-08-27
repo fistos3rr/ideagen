@@ -203,31 +203,3 @@ func (app *application) updateTypeHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (app *application) randomTypesHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Limit      int
-		ActiveOnly bool
-	}
-
-	v := validator.New()
-	qs := r.URL.Query()
-
-	input.Limit = app.readInt(qs, "limit", 1, v)
-	input.ActiveOnly = app.readBool(qs, "active_only", v)
-
-	if !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
-		return
-	}
-
-	types, err := app.models.Types.GetRandom(input.Limit, input.ActiveOnly)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
-	err = app.writeJSON(w, http.StatusOK, envelope{"types": types, "size": len(types)}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-}

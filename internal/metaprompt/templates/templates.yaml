@@ -1,1 +1,1 @@
-"You are an expert prompt engineer. Generate a thought-provoking prompt that will inspire the user to explore a fascinating topic in medicine. It should give really interesting and modern idea for default user without expertise. It should ask for a topic name only."
+- "Use this phrase for reflecting: {{.Seed}}. You are an expert prompt engineer. Generate a thought-provoking prompt that will inspire the user to explore a fascinating topic in {{.Topic}}."
