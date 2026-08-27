@@ -12,14 +12,12 @@ import (
 type GroqClient struct {
 	cfg     Config
 	http    *http.Client
-	baseURL string
 }
 
 func NewGroqClient(cfg Config) *GroqClient {
 	return &GroqClient{
 		cfg:     cfg,
 		http:    &http.Client{Timeout: 30 * time.Second},
-		baseURL: "https://api.groq.com/openai/v1/chat/completions",
 	}
 }
 
@@ -54,7 +52,7 @@ func (c *GroqClient) SendMessage(ctx context.Context, message string) (string, e
 		return "", err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL, bytes.NewReader(jsonData))
+	req, err := http.NewRequestWithContext(ctx, "POST", c.cfg.APIURL, bytes.NewReader(jsonData))
 	if err != nil {
 		return "", err
 	}

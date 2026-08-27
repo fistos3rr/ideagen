@@ -122,24 +122,24 @@ func main() {
 		"dsn": cfg.db.dsn,
 	})
 
-	var provider ai.Provider
-	switch cfg.aiProviderType {
-	case "groq":
-		aicfg := ai.Config{
+	aicfg := ai.Config{
 			APIKey: os.Getenv("AI_API_KEY"),
-			Model:  "openai/gpt-oss-20b",
+			Model:  os.Getenv("AI_MODEL"),
+			APIURL: os.Getenv("AI_API_URL"),
 		}
-
-		logData := map[string]string{
-
+	aiLogData := map[string]string{
+			"api_url": aicfg.APIURL,
 			"model": aicfg.Model,
 		}
 
 		if cfg.env == "development" {
-			logData["api_key"] = aicfg.APIKey
+			aiLogData["api_key"] = aicfg.APIKey
 		}
 
-		logger.PrintInfo("running groq ai provider", logData)
+	var provider ai.Provider
+	switch cfg.aiProviderType {
+	case "groq":
+		logger.PrintInfo("running groq ai provider", aiLogData)
 		provider = ai.NewGroqClient(aicfg)
 	default:
 		logger.PrintFatal(errors.New("unknown provider"), map[string]string{
