@@ -8,7 +8,44 @@ import (
 	"github.com/fistos3rr/ideagen/internal/data"
 )
 
-func (app *application) randomMetaPromptHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) generatePromptHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TypeID int64 `json:"type_id"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+	
+
+	typeObj, err := app.models.Types.Get(input.TypeID)
+	if err != nil {
+		if errors.Is(err, data.ErrRecordNotFound) {
+			v := validator.New()
+			v.AddError("type_id", "type with this id does not exist")
+			app.failedValidationResponse(w, r, v.Errors)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	
+	metaPrompt := app.metaGenerator.GenerateMetaPrompt(typeObj.Name)
+
+	prompt, err := app.aiProvider.SendMessage(r.Context(), metaPrompt, 1.0, 1.0)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"prompt": prompt}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) generateMetaPromptHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		TypeID   int64  `json:"type_id"`
 	}

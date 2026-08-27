@@ -26,7 +26,9 @@ func (app *application) routes() http.Handler {
 
 	router.HandleFunc("/v1/random/types", app.randomTypesHandler).Methods("GET")
 	router.HandleFunc("/v1/random/prompts", app.randomPromptsHandler).Methods("GET")
-	router.HandleFunc("/v1/random/meta-prompt", app.randomMetaPromptHandler).Methods("POST")
+
+	router.HandleFunc("/v1/generate/meta-prompt", app.generateMetaPromptHandler).Methods("POST")
+	router.HandleFunc("/v1/generate/prompt", app.generatePromptHandler).Methods("POST")
 
 	return router
 }
