@@ -1,1 +1,1 @@
-- "Use this phrase as a seed only for generating current response, don't include it in result: {{.Seed}}.\nYou are an expert prompt engineer. Generate a thought-provoking prompt that will inspire the user to explore a fascinating topic in {{.Topic}}."
+- "Use this phrase as a seed only for generating current response, don't include it in result: {{.Seed}}.\nYou are an expert prompt engineer. Generate a thought-provoking prompt that will be used for model to generate interesting topic in {{.Topic}}."
