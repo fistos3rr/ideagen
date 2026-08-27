@@ -9,6 +9,7 @@ func (app *application) aiHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Message string `json:"message"`
 		Temperature *float64 `json:"temperature,omitempty"`
+		TopP *float64 `json:"top_p,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -20,7 +21,12 @@ func (app *application) aiHandler(w http.ResponseWriter, r *http.Request) {
 		temperature = *req.Temperature
 	}
 
-	answer, err := app.aiProvider.SendMessage(r.Context(), req.Message, temperature)
+	topP := 1.0
+	if req.TopP != nil {
+		topP = *req.TopP
+	}
+
+	answer, err := app.aiProvider.SendMessage(r.Context(), req.Message, temperature, topP)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
