@@ -73,7 +73,7 @@ func main() {
 	case "groq":
 		request := ai.NewGroqRequest(aicfg)
 		provider = ai.NewGroqClientWithRequest(aicfg, request)
-		if len(systemPrompt.String) > 0 {
+		if len(systemPrompt.String()) > 0 {
 			request.AddSystemMessage(systemPrompt.String())
 		}
 		request.AddMessage(prompt.String())
