@@ -3,3 +3,4 @@ bin/
 .env
 *.env
 *.swp
+prompt.md
