@@ -3,5 +3,5 @@ bin/
 .env
 *.env
 *.swp
-prompt.md
-system.md
+/prompt.md
+/system.md

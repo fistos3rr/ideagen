@@ -25,9 +25,9 @@ func NewGroqClient(cfg Config) *GroqClient {
 
 func NewGroqClientWithRequest(cfg Config, req *GroqRequest) *GroqClient {
 	return &GroqClient{
-		cfg: cfg,
+		cfg:  cfg,
 		http: &http.Client{Timeout: 30 * time.Second},
-		Req: req,
+		Req:  req,
 	}
 }
 

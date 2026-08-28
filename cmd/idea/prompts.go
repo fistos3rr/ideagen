@@ -9,6 +9,37 @@ import (
 	"github.com/fistos3rr/ideagen/internal/validator"
 )
 
+func (app *application) randomPromptsHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TypeID     int64
+		Limit      int
+		ActiveOnly bool
+	}
+
+	v := validator.New()
+	qs := r.URL.Query()
+
+	input.TypeID = int64(app.readInt(qs, "type_id", 0, v))
+	input.Limit = app.readInt(qs, "limit", 1, v)
+	input.ActiveOnly = app.readBool(qs, "active_only", v)
+
+	if !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	prompts, err := app.models.Prompts.GetRandom(input.TypeID, input.Limit, input.ActiveOnly)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"prompts": prompts, "size": len(prompts)}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
 func (app *application) showPromptHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {

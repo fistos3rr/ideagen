@@ -69,7 +69,7 @@ func main() {
 	}
 
 	var provider ai.Provider
-	switch *providerType{
+	switch *providerType {
 	case "groq":
 		request := ai.NewGroqRequest(aicfg)
 		provider = ai.NewGroqClientWithRequest(aicfg, request)
