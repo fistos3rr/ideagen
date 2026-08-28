@@ -31,8 +31,8 @@ func (fs *fileString) Set(value string) error {
 }
 
 func main() {
-	data := flag.String("prompt", "", "prompt (if starts with ./ will use file instead of stdin text)")
-	dataSys := flag.String("system", "", "system prompt")
+	data := flag.String("prompt", "./prompt.md", "prompt (if starts with ./ will use file instead of stdin text)")
+	dataSys := flag.String("system", "./system.md", "system prompt")
 	providerType := flag.String("provider", "groq", "ai provider type")
 	flag.Parse()
 
