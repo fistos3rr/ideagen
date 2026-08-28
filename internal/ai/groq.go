@@ -12,20 +12,31 @@ import (
 type GroqClient struct {
 	cfg  Config
 	http *http.Client
+	Req  *GroqRequest
 }
 
 func NewGroqClient(cfg Config) *GroqClient {
 	return &GroqClient{
 		cfg:  cfg,
 		http: &http.Client{Timeout: 30 * time.Second},
+		Req:  NewGroqRequest(cfg),
 	}
 }
 
-type groqRequest struct {
+type GroqRequest struct {
 	Model       string        `json:"model"`
 	Messages    []groqMessage `json:"messages"`
 	Temperature float64       `json:"temperature"`
 	TopP        float64       `json:"top_p"`
+}
+
+func NewGroqRequest(cfg Config) *GroqRequest {
+	return &GroqRequest{
+		Model:       cfg.Model,
+		Messages:    make([]groqMessage, 0),
+		Temperature: 1.0,
+		TopP:        1.0,
+	}
 }
 
 type groqMessage struct {
@@ -41,17 +52,47 @@ type groqResponse struct {
 	} `json:"choices"`
 }
 
-func (c *GroqClient) SendMessage(ctx context.Context, message string, temperature float64, topP float64) (string, error) {
-	reqBody := groqRequest{
-		Model: c.cfg.Model,
-		Messages: []groqMessage{
-			{Role: "user", Content: message},
-		},
-		Temperature: temperature,
-		TopP:        topP,
+func (c *GroqClient) SendMessage(ctx context.Context, message string) (string, error) {
+	c.Req.Messages = []groqMessage{
+		{Role: "user", Content: message},
 	}
 
-	jsonData, err := json.Marshal(reqBody)
+	jsonData, err := json.Marshal(c.Req)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", c.cfg.APIURL, bytes.NewReader(jsonData))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.cfg.APIKey)
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("groq API returned status %d", resp.StatusCode)
+	}
+
+	var result groqResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("no choices in response")
+	}
+
+	return result.Choices[0].Message.Content, nil
+}
+
+func (c *GroqClient) SendRequest(ctx context.Context) (string, error) {
+	jsonData, err := json.Marshal(c.Req)
 	if err != nil {
 		return "", err
 	}

@@ -31,8 +31,6 @@ func (fs *fileString) Set(value string) error {
 }
 
 func main() {
-	temperature := flag.Float64("temperature", 1.0, "temperature param")
-	topP := flag.Float64("top_p", 1.0, "top_p param")
 	data := flag.String("prompt", "", "prompt (if starts with ./ will use file instead of stdin text)")
 	flag.Parse()
 
@@ -65,7 +63,7 @@ func main() {
 	var provider ai.Provider
 	provider = ai.NewGroqClient(aicfg)
 
-	answer, err := provider.SendMessage(context.Background(), prompt.String(), *temperature, *topP)
+	answer, err := provider.SendMessage(context.Background(), prompt.String())
 	if err != nil {
 		panic(fmt.Errorf("error while asking ai: %w\n", err))
 	}
