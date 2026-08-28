@@ -55,6 +55,10 @@ func (req *GroqRequest) AddMessage(message string) {
 	req.Messages = append(req.Messages, groqMessage{Role: "user", Content: message})
 }
 
+func (req *GroqRequest) AddSystemMessage(message string) {
+	req.Messages = append(req.Messages, groqMessage{Role: "system", Content: message})
+}
+
 type groqMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`

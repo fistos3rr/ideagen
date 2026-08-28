@@ -32,6 +32,7 @@ func (fs *fileString) Set(value string) error {
 
 func main() {
 	data := flag.String("prompt", "", "prompt (if starts with ./ will use file instead of stdin text)")
+	dataSys := flag.String("system", "", "system prompt")
 	providerType := flag.String("provider", "groq", "ai provider type")
 	flag.Parse()
 
@@ -42,6 +43,12 @@ func main() {
 
 	var prompt fileString
 	err := prompt.Set(*data)
+	if err != nil {
+		panic(fmt.Errorf("error reading prompt: %w\n", err))
+	}
+
+	var systemPrompt fileString
+	err = systemPrompt.Set(*dataSys)
 	if err != nil {
 		panic(fmt.Errorf("error reading prompt: %w\n", err))
 	}
@@ -66,6 +73,9 @@ func main() {
 	case "groq":
 		request := ai.NewGroqRequest(aicfg)
 		provider = ai.NewGroqClientWithRequest(aicfg, request)
+		if len(systemPrompt.String) > 0 {
+			request.AddSystemMessage(systemPrompt.String())
+		}
 		request.AddMessage(prompt.String())
 	default:
 		panic("unknown provider type")
