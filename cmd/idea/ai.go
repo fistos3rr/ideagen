@@ -5,12 +5,11 @@ import (
 	"net/http"
 )
 
-
 func (app *application) aiHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Message string `json:"message"`
+		Message     string   `json:"message"`
 		Temperature *float64 `json:"temperature,omitempty"`
-		TopP *float64 `json:"top_p,omitempty"`
+		TopP        *float64 `json:"top_p,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		app.serverErrorResponse(w, r, err)

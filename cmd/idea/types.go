@@ -202,4 +202,3 @@ func (app *application) updateTypeHandler(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 	}
 }
-

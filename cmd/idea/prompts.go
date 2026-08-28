@@ -223,4 +223,3 @@ func (app *application) updatePromptHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 }
-

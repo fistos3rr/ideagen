@@ -4,22 +4,22 @@ package metaprompt
 import (
 	"embed"
 	"math/rand"
+	"strings"
 	"text/template"
 	"time"
-	"strings"
 
-	"gopkg.in/yaml.v3"
 	"github.com/luxfi/go-bip39"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed templates/*.yaml templates/dicts/*.yaml
 var fs embed.FS
 
 type MetaPromptGenerator struct {
-	rng *rand.Rand
-	dicts map[string][]string
+	rng             *rand.Rand
+	dicts           map[string][]string
 	templateStrings []string
-	requirements []string
+	requirements    []string
 }
 
 func NewMetaPromptGenerator() *MetaPromptGenerator {
@@ -29,7 +29,6 @@ func NewMetaPromptGenerator() *MetaPromptGenerator {
 
 	return generator
 }
-
 
 func (g *MetaPromptGenerator) init() {
 	g.rng = rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -101,11 +100,11 @@ func (g *MetaPromptGenerator) GenerateMetaPrompt(topic string) string {
 	}
 
 	data := map[string]string{
-		"Verb": g.randomFrom("verbs"),
+		"Verb":      g.randomFrom("verbs"),
 		"Adjective": g.randomFrom("adjectives"),
-		"Style": g.randomFrom("styles"),
-		"Topic": topic,
-		"Seed": mnemonic,
+		"Style":     g.randomFrom("styles"),
+		"Topic":     topic,
+		"Seed":      mnemonic,
 	}
 
 	tmpl, err := template.New("meta").Parse(tmplStr)

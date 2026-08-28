@@ -31,11 +31,11 @@ type config struct {
 }
 
 type application struct {
-	config     config
-	logger     *jsonlog.Logger
-	aiProvider ai.Provider
-	models     data.Models
-	wg         sync.WaitGroup
+	config        config
+	logger        *jsonlog.Logger
+	aiProvider    ai.Provider
+	models        data.Models
+	wg            sync.WaitGroup
 	metaGenerator *metaprompt.MetaPromptGenerator
 }
 
@@ -125,18 +125,18 @@ func main() {
 	})
 
 	aicfg := ai.Config{
-			APIKey: os.Getenv("AI_API_KEY"),
-			Model:  os.Getenv("AI_MODEL"),
-			APIURL: os.Getenv("AI_API_URL"),
-		}
+		APIKey: os.Getenv("AI_API_KEY"),
+		Model:  os.Getenv("AI_MODEL"),
+		APIURL: os.Getenv("AI_API_URL"),
+	}
 	aiLogData := map[string]string{
-			"api_url": aicfg.APIURL,
-			"model": aicfg.Model,
-		}
+		"api_url": aicfg.APIURL,
+		"model":   aicfg.Model,
+	}
 
-		if cfg.env == "development" {
-			aiLogData["api_key"] = aicfg.APIKey
-		}
+	if cfg.env == "development" {
+		aiLogData["api_key"] = aicfg.APIKey
+	}
 
 	var provider ai.Provider
 	switch cfg.aiProviderType {
@@ -158,10 +158,10 @@ func main() {
 	logger.PrintInfo("database connection pool established", nil)
 
 	app := &application{
-		config:     cfg,
-		logger:     logger,
-		aiProvider: provider,
-		models:     data.NewModels(db),
+		config:        cfg,
+		logger:        logger,
+		aiProvider:    provider,
+		models:        data.NewModels(db),
 		metaGenerator: metaprompt.NewMetaPromptGenerator(),
 	}
 

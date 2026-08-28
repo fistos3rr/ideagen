@@ -1,12 +1,12 @@
 package main
 
 import (
-	"net/http"
 	"errors"
 	"fmt"
+	"net/http"
 
-	"github.com/fistos3rr/ideagen/internal/validator"
 	"github.com/fistos3rr/ideagen/internal/data"
+	"github.com/fistos3rr/ideagen/internal/validator"
 	"github.com/luxfi/go-bip39"
 )
 
@@ -32,7 +32,7 @@ func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	
+
 	metaPrompt := app.metaGenerator.GenerateMetaPrompt(typeObj.Name)
 
 	prompt, err := app.aiProvider.SendMessage(r.Context(), metaPrompt, 1.0, 1.0)
@@ -61,7 +61,7 @@ func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"meta_prompt": metaPrompt,"prompt": prompt, "idea": idea}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"meta_prompt": metaPrompt, "prompt": prompt, "idea": idea}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -77,7 +77,6 @@ func (app *application) generatePromptHandler(w http.ResponseWriter, r *http.Req
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	
 
 	typeObj, err := app.models.Types.Get(input.TypeID)
 	if err != nil {
@@ -90,7 +89,7 @@ func (app *application) generatePromptHandler(w http.ResponseWriter, r *http.Req
 		app.serverErrorResponse(w, r, err)
 		return
 	}
-	
+
 	metaPrompt := app.metaGenerator.GenerateMetaPrompt(typeObj.Name)
 
 	prompt, err := app.aiProvider.SendMessage(r.Context(), metaPrompt, 1.0, 1.0)
@@ -98,7 +97,7 @@ func (app *application) generatePromptHandler(w http.ResponseWriter, r *http.Req
 		app.serverErrorResponse(w, r, err)
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"meta_prompt": metaPrompt,"prompt": prompt}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"meta_prompt": metaPrompt, "prompt": prompt}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
@@ -106,7 +105,7 @@ func (app *application) generatePromptHandler(w http.ResponseWriter, r *http.Req
 
 func (app *application) generateMetaPromptHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		TypeID   int64  `json:"type_id"`
+		TypeID int64 `json:"type_id"`
 	}
 
 	err := app.readJSON(w, r, &input)

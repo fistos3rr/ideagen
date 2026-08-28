@@ -10,22 +10,22 @@ import (
 )
 
 type GroqClient struct {
-	cfg     Config
-	http    *http.Client
+	cfg  Config
+	http *http.Client
 }
 
 func NewGroqClient(cfg Config) *GroqClient {
 	return &GroqClient{
-		cfg:     cfg,
-		http:    &http.Client{Timeout: 30 * time.Second},
+		cfg:  cfg,
+		http: &http.Client{Timeout: 30 * time.Second},
 	}
 }
 
 type groqRequest struct {
-	Model    string        `json:"model"`
-	Messages []groqMessage `json:"messages"`
-	Temperature float64 `json:"temperature"`
-	TopP float64 `json:"top_p"`
+	Model       string        `json:"model"`
+	Messages    []groqMessage `json:"messages"`
+	Temperature float64       `json:"temperature"`
+	TopP        float64       `json:"top_p"`
 }
 
 type groqMessage struct {
@@ -48,7 +48,7 @@ func (c *GroqClient) SendMessage(ctx context.Context, message string, temperatur
 			{Role: "user", Content: message},
 		},
 		Temperature: temperature,
-		TopP: topP,
+		TopP:        topP,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
