@@ -23,6 +23,14 @@ func NewGroqClient(cfg Config) *GroqClient {
 	}
 }
 
+func NewGroqClientWithRequest(cfg Config, req *GroqRequest) *GroqClient {
+	return &GroqClient{
+		cfg: cfg,
+		http: &http.Client{Timeout: 30 * time.Second},
+		Req: req,
+	}
+}
+
 type GroqRequest struct {
 	Model       string        `json:"model"`
 	Messages    []groqMessage `json:"messages"`
@@ -37,6 +45,14 @@ func NewGroqRequest(cfg Config) *GroqRequest {
 		Temperature: 1.0,
 		TopP:        1.0,
 	}
+}
+
+func (req *GroqRequest) Clear(message string) {
+	req.Messages = make([]groqMessage, 0)
+}
+
+func (req *GroqRequest) AddMessage(message string) {
+	req.Messages = append(req.Messages, groqMessage{Role: "user", Content: message})
 }
 
 type groqMessage struct {

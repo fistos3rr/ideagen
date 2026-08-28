@@ -32,6 +32,7 @@ func (fs *fileString) Set(value string) error {
 
 func main() {
 	data := flag.String("prompt", "", "prompt (if starts with ./ will use file instead of stdin text)")
+	providerType := flag.String("provider", "groq", "ai provider type")
 	flag.Parse()
 
 	if len(*data) == 0 {
@@ -61,9 +62,16 @@ func main() {
 	}
 
 	var provider ai.Provider
-	provider = ai.NewGroqClient(aicfg)
+	switch *providerType{
+	case "groq":
+		request := ai.NewGroqRequest(aicfg)
+		provider = ai.NewGroqClientWithRequest(aicfg, request)
+		request.AddMessage(prompt.String())
+	default:
+		panic("unknown provider type")
+	}
 
-	answer, err := provider.SendMessage(context.Background(), prompt.String())
+	answer, err := provider.SendRequest(context.Background())
 	if err != nil {
 		panic(fmt.Errorf("error while asking ai: %w\n", err))
 	}
