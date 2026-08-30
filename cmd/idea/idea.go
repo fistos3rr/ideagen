@@ -27,22 +27,27 @@ func (app *application) newRequest(pr string, sysPr string) error {
 	return reqErr
 }
 
-func (app *application) generateIdea(ctx context.Context, t string) (string, error) {
-	sysPr, pr, err := app.promptManager.GetPrompts(t)
+func (app *application) generateIdea(ctx context.Context, t *data.Type) (*data.Idea, error) {
+	sysPr, pr, err := app.promptManager.GetPrompts(t.Name)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = app.newRequest(pr, sysPr)
 	if errors.Is(err, ai.ErrSetRequest) {
 		app.logger.PrintFatal(err, nil)
 	} else if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	answer, err := app.aiProvider.SendRequest(ctx)
 
-	return answer, err
+	idea := &data.Idea{
+		Type: t,
+		Text: answer,
+	}
+
+	return idea, err
 }
 
 func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,15 +93,21 @@ func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Reque
 			}
 			return
 		}
+		if !t.IsActive {
+			app.failedValidationResponse(w, r, map[string]string{
+				"active_only": "type is not active, while active_only query set",
+			})
+			return
+		}
 	}
 
-	ideaText, err := app.generateIdea(r.Context(), t.Name)
+	idea, err := app.generateIdea(r.Context(), t)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"idea": ideaText, "type": t.Name}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"idea": idea.Text, "type_id": t.ID}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
