@@ -10,7 +10,7 @@ func (app *application) routes() http.Handler {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/v1/health", app.healthcheckHandler).Methods("GET")
-	router.HandleFunc("/v1/ask", app.aiHandler).Methods("POST")
+	router.HandleFunc("/v1/ask", app.authenticate(app.aiHandler)).Methods("POST")
 
 	router.HandleFunc("/v1/types", app.createTypeHandler).Methods("POST")
 	router.HandleFunc("/v1/types/{id}", app.showTypeHandler).Methods("GET")
@@ -27,6 +27,8 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/idea", app.generateIdeaHandler).Methods("GET")
 
 	router.HandleFunc("/v1/random/types", app.randomTypesHandler).Methods("GET")
+
+	router.HandleFunc("v1/tokens/auth", app.createJwtTokenHandler).Methods("POST")
 
 	return router
 }

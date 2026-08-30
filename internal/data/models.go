@@ -27,11 +27,17 @@ type Models struct {
 		Delete(id int64) error
 		Update(idea *Idea) error
 	}
+	Users interface {
+		Insert(user *User) error
+		GetByEmail(email string) (*User, error)
+		Update(user *User) error
+	}
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Types: TypeModel{DB: db},
 		Ideas: IdeaModel{DB: db},
+		Users: UserModel{DB: db},
 	}
 }
