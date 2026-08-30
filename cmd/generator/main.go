@@ -33,7 +33,7 @@ func getPrompts(t string) (string, string) {
 }
 
 func main() {
-	logger = jsonlog.New(os.Stdout, jsonlog.LevelInfo)	
+	logger = jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	providerType := flag.String("provider", "groq", "ai provider type")
 	t := flag.String("type", "", "topic type")

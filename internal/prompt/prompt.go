@@ -16,15 +16,15 @@ import (
 )
 
 var (
-	ErrSystemPromptNotExists = errors.New("system prompt not found, using default system prompt")
-	ErrPromptsNotExists = errors.New("prompts not found, using default prompts")
+	ErrSystemPromptNotExists  = errors.New("system prompt not found, using default system prompt")
+	ErrPromptsNotExists       = errors.New("prompts not found, using default prompts")
 	ErrPromptsFolderNotExists = errors.New("prompts folder not found, using default prompts")
 )
 
 func IsDefaultErr(err error) bool {
 	if errors.Is(err, ErrPromptsFolderNotExists) ||
-	errors.Is(err, ErrPromptsNotExists) ||
-	errors.Is(err, ErrSystemPromptNotExists) {
+		errors.Is(err, ErrPromptsNotExists) ||
+		errors.Is(err, ErrSystemPromptNotExists) {
 		return true
 	} else {
 		return false
@@ -93,7 +93,7 @@ func NewPromptManager(rootPath string) (*PromptManager, error) {
 		if !strings.HasSuffix(entry.Name(), ".md") {
 			continue
 		}
-		data, err := fs.ReadFile(promptsFS, "templates/prompts/" + entry.Name())
+		data, err := fs.ReadFile(promptsFS, "templates/prompts/"+entry.Name())
 		if err != nil {
 			return nil, err
 		}

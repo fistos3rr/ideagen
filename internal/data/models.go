@@ -24,6 +24,6 @@ type Models struct {
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Types:   TypeModel{DB: db},
+		Types: TypeModel{DB: db},
 	}
 }
