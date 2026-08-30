@@ -34,6 +34,7 @@ type application struct {
 	config        config
 	logger        *jsonlog.Logger
 	aiProvider    ai.Provider
+	aiConfig      ai.Config
 	models        data.Models
 	wg            sync.WaitGroup
 	promptManager *prompt.PromptManager
@@ -129,6 +130,7 @@ func main() {
 		Model:  os.Getenv("AI_MODEL"),
 		APIURL: os.Getenv("AI_API_URL"),
 	}
+
 	aiLogData := map[string]string{
 		"api_url": aicfg.APIURL,
 		"model":   aicfg.Model,
@@ -171,6 +173,7 @@ func main() {
 		config:        cfg,
 		logger:        logger,
 		aiProvider:    provider,
+		aiConfig:      aicfg,
 		models:        data.NewModels(db),
 		promptManager: promptManager,
 	}
