@@ -14,7 +14,7 @@ func (app *application) newRequest(pr string, sysPr string) error {
 	var reqErr error
 	providerType := app.config.aiProviderType
 	var req ai.Request
-	switch providerType{
+	switch providerType {
 	case "groq":
 		req = ai.NewGroqRequest(app.aiConfig)
 		req.AddMessage(pr)
@@ -47,30 +47,47 @@ func (app *application) generateIdea(ctx context.Context, t string) (string, err
 
 func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		TypeID int
+		TypeID     int
+		ActiveOnly bool
 	}
 
 	v := validator.New()
 	qs := r.URL.Query()
 
-	input.TypeID = app.readInt(qs, "type_id", 0, v)
+	input.TypeID = app.readInt(qs, "type_id", -1, v)
+	input.ActiveOnly = app.readBool(qs, "active_only", v)
 
 	if !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	t, err := app.models.Types.Get(int64(input.TypeID))
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			app.failedValidationResponse(w, r, map[string]string{
-				"type_id": "type with this id does not exists",
-			})
-		default:
+	var t *data.Type
+	var err error
+	if input.TypeID == -1 {
+		types, err := app.models.Types.GetRandom(1, input.ActiveOnly)
+		if err != nil {
 			app.serverErrorResponse(w, r, err)
+			return
 		}
-		return
+		if len(types) == 0 {
+			app.notFoundResponse(w, r)
+			return
+		}
+		t = types[0]
+	} else {
+		t, err = app.models.Types.Get(int64(input.TypeID))
+		if err != nil {
+			switch {
+			case errors.Is(err, data.ErrRecordNotFound):
+				app.failedValidationResponse(w, r, map[string]string{
+					"type_id": "type with this id does not exists",
+				})
+			default:
+				app.serverErrorResponse(w, r, err)
+			}
+			return
+		}
 	}
 
 	ideaText, err := app.generateIdea(r.Context(), t.Name)
@@ -79,7 +96,7 @@ func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"idea": ideaText}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"idea": ideaText, "type": t.Name}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
