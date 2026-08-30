@@ -13,6 +13,7 @@ import (
 	"github.com/fistos3rr/ideagen/internal/ai"
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/jsonlog"
+	"github.com/fistos3rr/ideagen/internal/prompt"
 
 	_ "github.com/lib/pq"
 )
@@ -30,11 +31,12 @@ type config struct {
 }
 
 type application struct {
-	config     config
-	logger     *jsonlog.Logger
-	aiProvider ai.Provider
-	models     data.Models
-	wg         sync.WaitGroup
+	config        config
+	logger        *jsonlog.Logger
+	aiProvider    ai.Provider
+	models        data.Models
+	wg            sync.WaitGroup
+	promptManager *prompt.PromptManager
 }
 
 func (cfg *config) parseEnv() {
@@ -155,11 +157,22 @@ func main() {
 
 	logger.PrintInfo("database connection pool established", nil)
 
+	promptManager, err := prompt.NewPromptManager(".")
+	ok := prompt.IsDefaultErr(err)
+	if ok {
+		logger.PrintInfo("initializing prompt manager", map[string]string{
+			"files": err.Error(),
+		})
+	} else if err != nil {
+		panic(err)
+	}
+
 	app := &application{
-		config:     cfg,
-		logger:     logger,
-		aiProvider: provider,
-		models:     data.NewModels(db),
+		config:        cfg,
+		logger:        logger,
+		aiProvider:    provider,
+		models:        data.NewModels(db),
+		promptManager: promptManager,
 	}
 
 	err = app.serve()
