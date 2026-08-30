@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/fistos3rr/ideagen/internal/ai"
@@ -111,5 +112,209 @@ func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
+	}
+}
+
+func (app *application) showIdeaHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	idea, err := app.models.Ideas.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"idea": idea}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) createIdeaHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TypeID int64  `json:"type_id"`
+		Text   string `json:"text"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	typeObj, err := app.models.Types.Get(input.TypeID)
+	if err != nil {
+		if errors.Is(err, data.ErrRecordNotFound) {
+			v := validator.New()
+			v.AddError("type_id", "type with this id does not exist")
+			app.failedValidationResponse(w, r, v.Errors)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	idea := &data.Idea{
+		Type: typeObj,
+		Text: input.Text,
+	}
+
+	v := validator.New()
+	if data.ValidateIdea(v, idea); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Ideas.Insert(idea)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/ideas/%d", idea.ID))
+
+	err = app.writeJSON(w, http.StatusCreated, envelope{"idea": idea}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) deleteIdeaHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	err = app.models.Ideas.Delete(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"message": "idea successfully deleted"}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) listIdeasHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Text       string
+		TypeID     int64
+		ActiveOnly bool
+		data.Filters
+	}
+
+	v := validator.New()
+	qs := r.URL.Query()
+
+	input.Text = app.readString(qs, "text", "")
+	input.TypeID = int64(app.readInt(qs, "type_id", 0, v))
+	input.ActiveOnly = app.readBool(qs, "active_only", v)
+	input.Page = app.readInt(qs, "page", 1, v)
+	input.PageSize = app.readInt(qs, "page_size", 20, v)
+	input.Sort = app.readString(qs, "sort", "id")
+	input.SortSafelist = []string{"id", "text", "type_id", "-id", "-name", "-type_id"}
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	ideas, metadata, err := app.models.Ideas.GetAll(input.Text, input.TypeID, input.ActiveOnly, input.Filters)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"ideas": ideas, "metadata": metadata}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
+func (app *application) updateIdeaHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := app.readIDParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	idea, err := app.models.Ideas.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	var input struct {
+		Text   *string `json:"name"`
+		TypeID *int64  `json:"type_id"`
+	}
+
+	err = app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if input.Text != nil {
+		idea.Text = *input.Text
+	}
+	if input.TypeID != nil {
+		typeObj, err := app.models.Types.Get(*input.TypeID)
+		if err != nil {
+			if errors.Is(err, data.ErrRecordNotFound) {
+				v := validator.New()
+				v.AddError("type_id", "type with this id does not exist")
+				app.failedValidationResponse(w, r, v.Errors)
+				return
+			}
+			app.serverErrorResponse(w, r, err)
+			return
+		}
+		idea.Type = typeObj
+	}
+
+	v := validator.New()
+	if data.ValidateIdea(v, idea); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Ideas.Update(idea)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"idea": idea}, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
 	}
 }
