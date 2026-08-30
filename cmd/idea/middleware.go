@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func (app *application) recoverPanic(next http.HandlerFunc) http.HandlerFunc {
+func (app *application) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -23,7 +23,7 @@ func (app *application) recoverPanic(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
-func (app *application) authenticate(next http.HandlerFunc) http.HandlerFunc {
+func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Authorization")
 

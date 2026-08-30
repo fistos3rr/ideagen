@@ -15,7 +15,7 @@ func (app *application) createJwtTokenHandler(w http.ResponseWriter, r *http.Req
 		Password string `json:"password"`
 	}
 
-	err := app.readJSON(w, r, input)
+	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return

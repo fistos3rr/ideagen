@@ -87,7 +87,7 @@ func (m UserModel) Insert(user *User) error {
 	query := `
 		INSERT INTO users (email, password_hash)
 		VALUES ($1, $2)
-		RETURNING id, created_at, version
+		RETURNING id, created_at
 	`
 
 	args := []any{user.Email, user.Password.hash}
