@@ -4,15 +4,26 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/fistos3rr/ideagen/internal/ai"
+	"github.com/fistos3rr/ideagen/internal/jsonlog"
 	"github.com/fistos3rr/ideagen/internal/prompt"
 	"github.com/spf13/viper"
 )
 
+var logger *jsonlog.Logger
+
 func getPrompts(t string) (string, string) {
-	promptManager := prompt.NewDefaultPromptManager()
+	promptManager, err := prompt.NewPromptManager(".")
+	ok := prompt.IsDefaultErr(err)
+	if ok {
+		logger.PrintInfo(err.Error(), nil)
+	} else if err != nil {
+		panic(err)
+	}
+
 	sysPr, pr, err := promptManager.GetPrompts(t)
 	if err != nil {
 		panic(err)
@@ -22,6 +33,8 @@ func getPrompts(t string) (string, string) {
 }
 
 func main() {
+	logger = jsonlog.New(os.Stdout, jsonlog.LevelInfo)	
+
 	providerType := flag.String("provider", "groq", "ai provider type")
 	t := flag.String("type", "", "topic type")
 	flag.Parse()

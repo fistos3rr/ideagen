@@ -44,13 +44,13 @@ func main() {
 	var prompt fileString
 	err := prompt.Set(*data)
 	if err != nil {
-		panic(fmt.Errorf("error reading prompt: %w\n", err))
+		panic(fmt.Errorf("error reading prompt: %w", err))
 	}
 
 	var systemPrompt fileString
 	err = systemPrompt.Set(*dataSys)
 	if err != nil {
-		panic(fmt.Errorf("error reading prompt: %w\n", err))
+		panic(fmt.Errorf("error reading prompt: %w", err))
 	}
 
 	viper.SetConfigName("app")
@@ -59,7 +59,7 @@ func main() {
 
 	err = viper.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("error reading app.env file: %w\n", err))
+		panic(fmt.Errorf("error reading app.env file: %w", err))
 	}
 
 	aicfg := ai.Config{
@@ -83,7 +83,7 @@ func main() {
 
 	answer, err := provider.SendRequest(context.Background())
 	if err != nil {
-		panic(fmt.Errorf("error while asking ai: %w\n", err))
+		panic(fmt.Errorf("error while asking ai: %w", err))
 	}
 
 	fmt.Println("PROMPT:")
