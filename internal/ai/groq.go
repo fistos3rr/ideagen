@@ -9,10 +9,21 @@ import (
 	"time"
 )
 
+
 type GroqClient struct {
 	cfg  Config
 	http *http.Client
 	Req  *GroqRequest
+}
+
+func (c *GroqClient) SetRequest(req Request) error {
+	groqReq, ok := req.(*GroqRequest)
+	if !ok {
+		return fmt.Errorf("%w: groq request", ErrSetRequest)
+	}
+	c.Req = groqReq
+
+	return nil
 }
 
 func NewGroqClient(cfg Config) *GroqClient {
