@@ -86,6 +86,41 @@ type UserModel struct {
 	DB *sql.DB
 }
 
+func (m UserModel) Get(id int64) (*User, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+		SELECT id, created_at, email, password_hash, role
+		FROM users
+		WHERE id = $1
+	`
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Email,
+		&user.Password.hash,
+		&user.Role,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}
+
 func (m UserModel) Insert(user *User) error {
 	query := `
 		INSERT INTO users (email, password_hash)
