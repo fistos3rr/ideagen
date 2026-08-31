@@ -7,6 +7,7 @@ import (
 
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/validator"
+	"github.com/fistos3rr/ideagen/internal/auth"
 )
 
 func (app *application) createJwtTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +54,7 @@ func (app *application) createJwtTokenHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	token, err := generateJWT(user.Email, 1*time.Hour, jwtSecret)
+	token, err := auth.GenerateJWT(user, 1*time.Hour, jwtSecret)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

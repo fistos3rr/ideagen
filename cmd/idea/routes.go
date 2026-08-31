@@ -13,7 +13,7 @@ func (app *application) routes() http.Handler {
 	router.MethodNotAllowedHandler = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	router.HandleFunc("/v1/health", app.healthcheckHandler).Methods("GET")
-	router.HandleFunc("/v1/ask", app.requireAuthenticatedUser(app.aiHandler)).Methods("POST")
+	router.HandleFunc("/v1/ask", app.requireUserRole("admin", app.aiHandler)).Methods("POST")
 
 	router.HandleFunc("/v1/types", app.createTypeHandler).Methods("POST")
 	router.HandleFunc("/v1/types/{id}", app.showTypeHandler).Methods("GET")
@@ -29,7 +29,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandleFunc("/v1/users", app.registerUserHandler).Methods("POST")
 
-	router.HandleFunc("/v1/idea", app.generateIdeaHandler).Methods("GET")
+	router.HandleFunc("/v1/idea", app.requireAuthenticatedUser(app.generateIdeaHandler)).Methods("GET")
 
 	router.HandleFunc("/v1/random/types", app.randomTypesHandler).Methods("GET")
 

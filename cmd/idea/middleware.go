@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/fistos3rr/ideagen/internal/data"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/fistos3rr/ideagen/internal/auth"
 )
 
 func (app *application) recoverPanic(next http.Handler) http.Handler {
@@ -42,26 +42,13 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		tokenString := headerParts[1]
 
-		claims := &jwt.RegisteredClaims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (any, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
-			}
-			return jwtSecret, nil
-		})
-
-		if err != nil || !token.Valid {
+		claims, err := auth.ParseToken(tokenString, jwtSecret)
+		if err != nil {
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
 		}
 
-		email := claims.Subject
-		if email == "" {
-			app.invalidAuthenticationTokenResponse(w, r)
-			return
-		}
-
-		user, err := app.models.Users.GetByEmail(email)
+		user, err := app.models.Users.Get(claims.UserID)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
@@ -73,6 +60,24 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		}
 
 		r = app.contextSetUser(r, user)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) requireUserRole(role string, next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+
+		if user.Role != role {
+			app.notPermittedResponse(w, r)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})

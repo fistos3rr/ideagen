@@ -29,6 +29,7 @@ type Models struct {
 	}
 	Users interface {
 		Insert(user *User) error
+		Get(id int64) (*User, error)
 		GetByEmail(email string) (*User, error)
 		Update(user *User) error
 	}
