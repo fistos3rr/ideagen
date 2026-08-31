@@ -12,13 +12,16 @@ import (
 
 var ErrDuplicateEmail = errors.New("duplicate email")
 
-var AnonymousUser = &User{}
+var AnonymousUser = &User{
+	Role: "user",
+}
 
 type User struct {
 	ID        int64     `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	Email     string    `json:"email"`
 	Password  password  `json:"-"`
+	Role      string    `json:"role"`
 }
 
 func (u *User) IsAnonymous() bool {
@@ -110,7 +113,7 @@ func (m UserModel) Insert(user *User) error {
 
 func (m UserModel) GetByEmail(email string) (*User, error) {
 	query := `
-		SELECT id, created_at, email, password_hash 
+		SELECT id, created_at, email, password_hash, role
 		FROM users
 		WHERE email = $1
 	`
@@ -125,6 +128,7 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 		&user.CreatedAt,
 		&user.Email,
 		&user.Password.hash,
+		&user.Role,
 	)
 	if err != nil {
 		switch {
