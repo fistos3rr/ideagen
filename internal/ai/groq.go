@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 type GroqClient struct {
 	cfg  Config
 	http *http.Client

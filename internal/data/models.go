@@ -23,7 +23,7 @@ type Models struct {
 	Ideas interface {
 		Insert(idea *Idea) error
 		Get(id int64) (*Idea, error)
-		GetAll(text string,	typeID int64, activeOnly bool,filters Filters) ([]*Idea, Metadata, error)
+		GetAll(text string, typeID int64, activeOnly bool, filters Filters) ([]*Idea, Metadata, error)
 		Delete(id int64) error
 		Update(idea *Idea) error
 	}

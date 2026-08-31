@@ -31,13 +31,13 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		if authHeader == "" {
 			r = app.contextSetUser(r, data.AnonymousUser)
 			next.ServeHTTP(w, r)
-			return 
+			return
 		}
 
 		headerParts := strings.Split(authHeader, " ")
 		if len(headerParts) != 2 || headerParts[0] != "Bearer" {
 			app.invalidAuthenticationTokenResponse(w, r)
-			return 
+			return
 		}
 
 		tokenString := headerParts[1]
@@ -52,13 +52,13 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		if err != nil || !token.Valid {
 			app.invalidAuthenticationTokenResponse(w, r)
-			return 
+			return
 		}
 
 		email := claims.Subject
 		if email == "" {
 			app.invalidAuthenticationTokenResponse(w, r)
-			return 
+			return
 		}
 
 		user, err := app.models.Users.GetByEmail(email)
