@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,11 +12,45 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/fistos3rr/ideagen/internal/auth"
+	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/validator"
 
 	"github.com/gorilla/mux"
 )
+
+func (app *application) generateJWTTokenPair(user *data.User) (
+	accessToken string,
+	refreshToken string,
+	refreshRecord *data.RefreshToken,
+	err error,
+) {
+	accessToken, err = auth.GenerateJWTAccessToken(user, app.config.jwt.accessTokenTTL, app.config.jwt.secret)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	jti := auth.NewTokenID()
+	refreshToken, err = auth.GenerateJWTRefreshToken(user, app.config.jwt.refreshTokenTTL, app.config.jwt.secret, jti)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	hash := sha256.Sum256([]byte(refreshToken))
+	tokenHash := hex.EncodeToString(hash[:])
+
+	refreshRecord = &data.RefreshToken{
+		ID:        jti,
+		UserID:    user.ID,
+		TokenHash: tokenHash,
+		ExpiresAt: time.Now().Add(app.config.jwt.refreshTokenTTL),
+		Revoked:   false,
+	}
+
+	return accessToken, refreshToken, refreshRecord, nil
+}
 
 func (app *application) readIDParam(r *http.Request) (int64, error) {
 	params := mux.Vars(r)

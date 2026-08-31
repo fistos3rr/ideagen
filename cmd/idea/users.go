@@ -3,11 +3,9 @@ package main
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/validator"
-	"github.com/fistos3rr/ideagen/internal/auth"
 )
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,13 +49,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	token, err := auth.GenerateJWT(user, 1*time.Hour, jwtSecret)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
-	err = app.writeJSON(w, http.StatusCreated, envelope{"jwt_token": token}, nil)
+	err = app.writeJSON(w, http.StatusCreated, envelope{}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

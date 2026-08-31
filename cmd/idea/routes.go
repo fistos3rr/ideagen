@@ -33,7 +33,9 @@ func (app *application) routes() http.Handler {
 
 	router.HandleFunc("/v1/random/types", app.randomTypesHandler).Methods("GET")
 
-	router.HandleFunc("/v1/tokens/auth", app.createJwtTokenHandler).Methods("POST")
+	router.HandleFunc("/v1/auth/login", app.loginUserHandler).Methods("POST")
+	router.HandleFunc("/v1/auth/logout", app.requireAuthenticatedUser(app.logoutHandler)).Methods("POST")
+	router.HandleFunc("/v1/auth/refresh", app.refreshHandler).Methods("POST")
 
 	return app.recoverPanic(app.authenticate(router))
 }

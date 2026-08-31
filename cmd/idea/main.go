@@ -28,6 +28,11 @@ type config struct {
 		maxIdleConns int
 		maxIdleTime  string
 	}
+	jwt struct {
+		secret          []byte
+		accessTokenTTL  time.Duration
+		refreshTokenTTL time.Duration
+	}
 }
 
 type application struct {
@@ -41,7 +46,25 @@ type application struct {
 }
 
 func (cfg *config) parseEnv() {
-	strVal := os.Getenv("PORT")
+	secret := os.Getenv("JWT_SECRET_KEY")
+	if secret == "" {
+		panic("no jwt secret provided")
+	}
+	jwtSecret := []byte(secret)
+
+	strVal := os.Getenv("ACCESS_TOKEN_TTL_MINUTES")
+	accessTTL, err := strconv.Atoi(strVal)
+	if err != nil {
+		accessTTL = 15
+	}
+
+	strVal = os.Getenv("REFRESH_TOKEN_TTL_DAYS")
+	refreshTTL, err := strconv.Atoi(strVal)
+	if err != nil {
+		refreshTTL = 30
+	}
+
+	strVal = os.Getenv("PORT")
 	port, err := strconv.Atoi(strVal)
 	if err != nil {
 		port = 8080
@@ -86,6 +109,9 @@ func (cfg *config) parseEnv() {
 	cfg.db.maxOpenConns = maxOpenConns
 	cfg.db.maxIdleConns = maxIdleConns
 	cfg.db.maxIdleTime = maxIdleTime
+	cfg.jwt.secret = jwtSecret
+	cfg.jwt.accessTokenTTL = time.Duration(accessTTL) * time.Minute
+	cfg.jwt.refreshTokenTTL = time.Duration(refreshTTL) * time.Hour * 24
 }
 
 func openDB(cfg config) (*sql.DB, error) {
@@ -120,6 +146,11 @@ func main() {
 	var cfg config
 	cfg.parseEnv()
 	cfg.env = "development"
+
+	logger.PrintInfo("jwt token config", map[string]string{
+		"access_token_ttl":  string(int(cfg.jwt.accessTokenTTL / time.Minute)),
+		"refresh_token_ttl": string(int(cfg.jwt.refreshTokenTTL / (24 * time.Hour))),
+	})
 
 	logger.PrintInfo("database config", map[string]string{
 		"dsn": cfg.db.dsn,

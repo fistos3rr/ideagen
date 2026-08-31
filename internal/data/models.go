@@ -33,12 +33,21 @@ type Models struct {
 		GetByEmail(email string) (*User, error)
 		Update(user *User) error
 	}
+	RefreshTokens interface {
+		Insert(token *RefreshToken) error
+		GetByHash(hash string) (*RefreshToken, error)
+		DeleteByHash(hash string) error
+		RevokeByHash(hash string) error
+		RevokeAllByUserID(userID int64) error
+		DeleteExpired() error
+	}
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Types: TypeModel{DB: db},
-		Ideas: IdeaModel{DB: db},
-		Users: UserModel{DB: db},
+		Types:         TypeModel{DB: db},
+		Ideas:         IdeaModel{DB: db},
+		Users:         UserModel{DB: db},
+		RefreshTokens: RefreshTokenModel{DB: db},
 	}
 }

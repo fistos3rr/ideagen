@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/auth"
+	"github.com/fistos3rr/ideagen/internal/data"
 )
 
 func (app *application) recoverPanic(next http.Handler) http.Handler {
@@ -42,7 +42,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 		tokenString := headerParts[1]
 
-		claims, err := auth.ParseToken(tokenString, jwtSecret)
+		claims, err := auth.ParseAccessToken(tokenString, app.config.jwt.secret)
 		if err != nil {
 			app.invalidAuthenticationTokenResponse(w, r)
 			return
