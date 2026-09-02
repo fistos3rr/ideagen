@@ -62,6 +62,27 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
+func (app *application) readIDParams(r *http.Request, args... string) (map[string]int64, error) {
+	if len(args) == 0 {
+		return nil, errors.New("no params id keys provided") 
+	}
+	params := mux.Vars(r)
+	ids := make(map[string]int64, len(args))
+	for _, param := range args {
+		p, ok := params[param]
+		if !ok {
+			return nil, fmt.Errorf("no param id in query string: %s", param)
+		}
+		id, err := strconv.ParseInt(p, 10, 64)
+		if err != nil || id < 1 {
+			return nil, fmt.Errorf("invalid id parameter: %s", param)
+		}	
+		ids[param] = id
+	}
+
+	return ids, nil
+}
+
 type envelope map[string]any
 
 func (app *application) writeJSON(

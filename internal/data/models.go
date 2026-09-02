@@ -9,6 +9,7 @@ var (
 	ErrRecordNotFound      = errors.New("record not found")
 	ErrEditConflict        = errors.New("edit conflict")
 	ErrForeignKeyViolation = errors.New("foreign key violation")
+	ErrDuplicateRecord     = errors.New("duplicate record")
 )
 
 type Models struct {
@@ -41,6 +42,26 @@ type Models struct {
 		RevokeAllByUserID(userID int64) error
 		DeleteExpired() error
 	}
+	UserIdeas interface {
+		Insert(user *User, idea *Idea) error
+		Delete(user *User, idea *Idea) error
+		DeleteById(userID int64, ideaID int64) error
+		ExistsUserIdea(userID int64, ideaID int64) (bool, error)
+		UpdateUserIdea(ui *UserIdea) error
+		GetIdeasByUserID(
+			userID int64,
+			text string,
+			typeID int64,
+			activeOnly bool,
+			status UserIdeaStatus,
+			filters Filters,
+		) ([]*Idea, Metadata, error)
+		GetUsersByIdeaID(
+			ideaID int64,
+			role string,	
+			filters Filters,
+		) ([]*User, Metadata, error)
+	}
 }
 
 func NewModels(db *sql.DB) Models {
@@ -49,5 +70,6 @@ func NewModels(db *sql.DB) Models {
 		Ideas:         IdeaModel{DB: db},
 		Users:         UserModel{DB: db},
 		RefreshTokens: RefreshTokenModel{DB: db},
+		UserIdeas:     UserIdeasModel{DB: db},
 	}
 }

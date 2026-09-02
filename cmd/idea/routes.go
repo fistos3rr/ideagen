@@ -13,26 +13,29 @@ func (app *application) routes() http.Handler {
 	router.MethodNotAllowedHandler = http.HandlerFunc(app.methodNotAllowedResponse)
 
 	router.HandleFunc("/v1/health", app.healthcheckHandler).Methods("GET")
+
 	router.HandleFunc("/v1/ask", app.requireUserRole("admin", app.aiHandler)).Methods("POST")
 
-	router.HandleFunc("/v1/types", app.createTypeHandler).Methods("POST")
-	router.HandleFunc("/v1/types/{id}", app.showTypeHandler).Methods("GET")
-	router.HandleFunc("/v1/types/{id}", app.deleteTypeHandler).Methods("DELETE")
-	router.HandleFunc("/v1/types", app.listTypesHandler).Methods("GET")
-	router.HandleFunc("/v1/types/{id}", app.updateTypeHandler).Methods("UPDATE")
+	router.HandleFunc("/v1/types", app.requireUserRole("admin", app.createTypeHandler)).Methods("POST")
+	router.HandleFunc("/v1/types/{id}", app.requireUserRole("admin", app.showTypeHandler)).Methods("GET")
+	router.HandleFunc("/v1/types/{id}", app.requireUserRole("admin", app.deleteTypeHandler)).Methods("DELETE")
+	router.HandleFunc("/v1/types", app.requireUserRole("admin", app.listTypesHandler)).Methods("GET")
+	router.HandleFunc("/v1/types/{id}", app.requireUserRole("admin", app.updateTypeHandler)).Methods("UPDATE")
+	//router.HandleFunc("/v1/random/types", app.requireUserRole("admin", app.randomTypesHandler)).Methods("GET")
 
-	router.HandleFunc("/v1/ideas", app.createIdeaHandler).Methods("POST")
-	router.HandleFunc("/v1/ideas/{id}", app.showIdeaHandler).Methods("GET")
-	router.HandleFunc("/v1/ideas/{id}", app.deleteIdeaHandler).Methods("DELETE")
-	router.HandleFunc("/v1/ideas", app.listIdeasHandler).Methods("GET")
-	router.HandleFunc("/v1/ideas/{id}", app.updateIdeaHandler).Methods("UPDATE")
+	router.HandleFunc("/v1/ideas", app.requireUserRole("admin", app.createIdeaHandler)).Methods("POST")
+	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("admin", app.showIdeaHandler)).Methods("GET")
+	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("admin", app.deleteIdeaHandler)).Methods("DELETE")
+	router.HandleFunc("/v1/ideas", app.requireUserRole("admin", app.listIdeasHandler)).Methods("GET")
+	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("admin", app.updateIdeaHandler)).Methods("UPDATE")
+	//router.HandleFunc("/v1/idea", app.requireUserRole("admin", app.generateIdeaHandler)).Methods("GET")
 
-	router.HandleFunc("/v1/users", app.registerUserHandler).Methods("POST")
+	router.HandleFunc("/v1/service/me", app.requireAuthenticatedUser(app.showMeHandler)).Methods("GET")
+	router.HandleFunc("/v1/service/ideas", app.requireAuthenticatedUser(app.listMyIdeasHandler)).Methods("GET")
+	router.HandleFunc("/v1/service/{id}", app.requireAuthenticatedUser(app.showMyIdeaHandler)).Methods("GET")
+	router.HandleFunc("/v1/service/{id}", app.requireAuthenticatedUser(app.deleteMyIdeaHandler)).Methods("DELETE")
 
-	router.HandleFunc("/v1/idea", app.requireAuthenticatedUser(app.generateIdeaHandler)).Methods("GET")
-
-	router.HandleFunc("/v1/random/types", app.randomTypesHandler).Methods("GET")
-
+	router.HandleFunc("/v1/register", app.registerUserHandler).Methods("POST")
 	router.HandleFunc("/v1/auth/login", app.loginUserHandler).Methods("POST")
 	router.HandleFunc("/v1/auth/logout", app.requireAuthenticatedUser(app.logoutHandler)).Methods("POST")
 	router.HandleFunc("/v1/auth/refresh", app.refreshHandler).Methods("POST")

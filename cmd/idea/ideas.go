@@ -230,7 +230,7 @@ func (app *application) listIdeasHandler(w http.ResponseWriter, r *http.Request)
 	input.Page = app.readInt(qs, "page", 1, v)
 	input.PageSize = app.readInt(qs, "page_size", 20, v)
 	input.Sort = app.readString(qs, "sort", "id")
-	input.SortSafelist = []string{"id", "text", "type_id", "-id", "-name", "-type_id"}
+	input.SortSafelist = []string{"id", "name", "type_id", "-id", "-name", "-type_id"}
 
 	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
@@ -318,3 +318,4 @@ func (app *application) updateIdeaHandler(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 	}
 }
+

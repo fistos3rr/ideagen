@@ -65,6 +65,30 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 	})
 }
 
+func (app *application) requireOwner(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := app.contextGetUser(r)
+
+		if user.IsAnonymous() {
+			app.authenticationRequiredResponse(w, r)
+			return
+		}
+
+		//id, err := app.readIDParam(r)
+		//if err != nil {
+		//	app.notFoundResponse(w, r)
+		//	return
+		//}
+
+		if user.Role != "admin" {
+			app.notPermittedResponse(w, r)
+		}
+
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (app *application) requireUserRole(role string, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
