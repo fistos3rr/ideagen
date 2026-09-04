@@ -8,10 +8,6 @@ import (
 	"github.com/fistos3rr/ideagen/internal/validator"
 )
 
-// ARCHITECTURE BROKEN
-// WAS WRITTEN WITH HEAD TRAUMA
-// NEED TO BE REVIEWED
-
 func (app *application) showMeHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
 	if user.IsAnonymous() {
@@ -191,84 +187,13 @@ func (app *application) readIdeaIDParam(r *http.Request) (int64, error) {
 	return ids["idea_id"], nil
 }
 
-func (app *application) insertIdeaInUserHandler(w http.ResponseWriter, r *http.Request) {
-	userID, err := app.readIDParam(r)
-	if err != nil {
-		app.notFoundResponse(w, r)
-		return
-	}
-
-	user, err := app.models.Users.Get(userID)
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			app.notFoundResponse(w, r)
-		default:
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	}
-
+func (app *application) createUserIdeaHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
+		UserID int64 `json:"user_id"`
 		IdeaID int64 `json:"idea_id"`
 	}
 
-	err = app.readJSON(w, r, &input)
-	if err != nil {
-		app.badRequestResponse(w, r, err)
-	}
-
-	idea, err := app.models.Ideas.Get(input.IdeaID)
-	if err != nil {
-		if errors.Is(err, data.ErrRecordNotFound) {
-			v := validator.New()
-			v.AddError("user_id", "user with this id does not exists")
-			app.failedValidationResponse(w, r, v.Errors)
-			return
-		}
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
-	err = app.models.UserIdeas.Insert(user, idea)
-	if err != nil {
-		if errors.Is(err, data.ErrDuplicateRecord) {
-			app.badRequestResponse(w, r, err)
-			return
-		}
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
-	err = app.writeJSON(w, http.StatusCreated, envelope{}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-}
-
-func (app *application) insertUserInIdeaHandler(w http.ResponseWriter, r *http.Request) {
-	ideaID, err := app.readIDParam(r)
-	if err != nil {
-		app.notFoundResponse(w, r)
-		return
-	}
-
-	idea, err := app.models.Ideas.Get(ideaID)
-	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
-			app.notFoundResponse(w, r)
-		default:
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	}
-
-	var input struct {
-		UserID int64 `json:"user_id"`
-	}
-
-	err = app.readJSON(w, r, &input)
+	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 	}
@@ -282,6 +207,19 @@ func (app *application) insertUserInIdeaHandler(w http.ResponseWriter, r *http.R
 			return
 		}
 		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	idea, err := app.models.Ideas.Get(input.IdeaID)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			v := validator.New()
+			v.AddError("idea_id", "idea with this id does not exists")
+			app.failedValidationResponse(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 

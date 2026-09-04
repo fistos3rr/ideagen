@@ -30,6 +30,8 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.updateIdeaHandler)).Methods("UPDATE")
 	//router.HandleFunc("/v1/idea", app.requireUserRole("Admin", app.generateIdeaHandler)).Methods("GET")
 
+	router.HandleFunc("/v1/user-idea", app.requireUserRole("Admin", app.createUserIdeaHandler)).Methods("POST")
+
 	router.HandleFunc("/v1/service/me", app.requireAuthenticatedUser(app.showMeHandler)).Methods("GET")
 	router.HandleFunc("/v1/service/ideas", app.requireAuthenticatedUser(app.listMyIdeasHandler)).Methods("GET")
 	router.HandleFunc("/v1/service/{id}", app.requireAuthenticatedUser(app.showMyIdeaHandler)).Methods("GET")

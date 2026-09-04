@@ -152,7 +152,6 @@ func (m UserIdeasModel) GetIdeasByUserID(
 			AND (to_tsvector('simple', i.text) @@ plainto_tsquery('simple', $2) OR $2 = '')
 			AND ($3 = 0 OR i.type_id = $3)
 			AND ($4 = false OR t.is_active = $4)
-            AND ($4 = false OR ui.is_active = $4)
 			AND ($7 = 0 OR ui.status = $7)
 		ORDER BY i.%s %s, i.id ASC
 		LIMIT $5 OFFSET $6`, filters.sortColumn(), filters.sortDirection())
