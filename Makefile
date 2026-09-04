@@ -1,3 +1,5 @@
+include .env
+
 # ================================================================== #
 # HELPERS
 # ================================================================== #
@@ -43,7 +45,13 @@ db/migrations/new:
 ## db/psql: connect to db in docker
 .PHONY: db/psql
 db/psql:
-	psql -h localhost -p 5432 -U ideagenuser -d ideagendb
+	#psql -h localhost -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME)
+	psql "postgresql://$(DB_USER):$(DB_PASSWORD)@localhost:$(DB_PORT)/$(DB_NAME)"
+
+## redis/cli: connect to redis cli
+.PHONY: redis/cli
+redis/cli:
+	docker compose exec -it ideagen-redis redis-cli -a $(REDIS_PASSWORD)
 
 # ================================================================== #
 # DOCKER

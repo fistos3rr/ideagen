@@ -20,6 +20,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
     restart: on-failure
   
   db:
@@ -48,5 +50,23 @@ services:
         condition: service_healthy
     restart: "no"
 
+  redis:
+    image: redis:8-alpine
+    container_name: ideagen-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: on-failure
+
 volumes:
   pgdata:
+  redis_data:
