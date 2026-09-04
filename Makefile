@@ -51,7 +51,7 @@ db/psql:
 ## redis/cli: connect to redis cli
 .PHONY: redis/cli
 redis/cli:
-	docker compose exec -it ideagen-redis redis-cli -a $(REDIS_PASSWORD)
+	docker compose exec -it redis redis-cli -a $(REDIS_PASSWORD)
 
 # ================================================================== #
 # DOCKER
