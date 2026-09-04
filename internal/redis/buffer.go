@@ -53,7 +53,7 @@ func (repo *BufferIdeasRepository) Add(ctx context.Context, userID int64, idea *
 func (repo *BufferIdeasRepository) GetAll(
 	ctx context.Context,
 	userID int64,
-) ([]*BufferIdea, error){
+) ([]*BufferIdea, error) {
 	key := fmt.Sprintf("buffer:idea:%d", userID)
 
 	values, err := repo.Client.LRange(ctx, key, 0, -1).Result()
@@ -65,7 +65,7 @@ func (repo *BufferIdeasRepository) GetAll(
 
 	for _, value := range values {
 		var bufIdea BufferIdea
-		
+
 		if err := json.Unmarshal([]byte(value), &bufIdea); err != nil {
 			return nil, fmt.Errorf("unmarshal buffer idea: %w", err)
 		}
@@ -78,7 +78,7 @@ func (repo *BufferIdeasRepository) GetAll(
 
 func (repo *BufferIdeasRepository) Get(
 	ctx context.Context,
-	userID int64, 
+	userID int64,
 	bufIdeaID string,
 ) (*BufferIdea, error) {
 	key := fmt.Sprintf("buffer:idea:%d", userID)

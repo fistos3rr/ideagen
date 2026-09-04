@@ -1,8 +1,8 @@
 package data
 
 import (
-	"github.com/lib/pq"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 func isForeignKeyViolation(err error) bool {

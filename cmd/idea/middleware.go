@@ -84,7 +84,6 @@ func (app *application) requireOwner(next http.HandlerFunc) http.HandlerFunc {
 			app.notPermittedResponse(w, r)
 		}
 
-
 		next.ServeHTTP(w, r)
 	})
 }

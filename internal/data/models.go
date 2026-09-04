@@ -58,7 +58,7 @@ type Models struct {
 		) ([]*Idea, Metadata, error)
 		GetUsersByIdeaID(
 			ideaID int64,
-			role string,	
+			role string,
 			filters Filters,
 		) ([]*User, Metadata, error)
 	}

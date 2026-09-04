@@ -318,4 +318,3 @@ func (app *application) updateIdeaHandler(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 	}
 }
-

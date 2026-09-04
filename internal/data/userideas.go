@@ -27,8 +27,8 @@ func (s UserIdeaStatus) IsValid() bool {
 }
 
 type UserIdea struct {
-	UserID int64           `json:"user_id"`
-	IdeaID int64           `json:"idea_id"`
+	UserID int64          `json:"user_id"`
+	IdeaID int64          `json:"idea_id"`
 	Status UserIdeaStatus `json:"is_active"`
 }
 
@@ -36,7 +36,7 @@ type UserIdeasModel struct {
 	DB *sql.DB
 }
 
-func ValidateUserStatus(v *validator.Validator, status UserIdeaStatus)  {
+func ValidateUserStatus(v *validator.Validator, status UserIdeaStatus) {
 	v.Check(status.IsValid(), "status", "status must be valid")
 }
 

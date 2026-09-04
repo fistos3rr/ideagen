@@ -72,9 +72,9 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 	return id, nil
 }
 
-func (app *application) readIDParams(r *http.Request, args... string) (map[string]int64, error) {
+func (app *application) readIDParams(r *http.Request, args ...string) (map[string]int64, error) {
 	if len(args) == 0 {
-		return nil, errors.New("no params id keys provided") 
+		return nil, errors.New("no params id keys provided")
 	}
 	params := mux.Vars(r)
 	ids := make(map[string]int64, len(args))
@@ -86,7 +86,7 @@ func (app *application) readIDParams(r *http.Request, args... string) (map[strin
 		id, err := strconv.ParseInt(p, 10, 64)
 		if err != nil || id < 1 {
 			return nil, fmt.Errorf("invalid id parameter: %s", param)
-		}	
+		}
 		ids[param] = id
 	}
 
