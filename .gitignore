@@ -5,3 +5,5 @@ bin/
 *.swp
 /prompt.md
 /system.md
+.jwt_token
+.cookies.txt
