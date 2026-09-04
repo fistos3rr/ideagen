@@ -34,6 +34,7 @@ JSON_BODY+="}"
 
 RESULT_URL="${API_URL}${SERVICE_ENDPOINT}"
 echo "Requesting $RESULT_URL"
+echo "JSON request: $JSON_BODY"
 curl_args=(-s -w "\n%{http_code}" -X POST "$RESULT_URL")
 curl_args+=(-H "Content-Type: application/json")
 if [ -n "$TOKEN" ]; then

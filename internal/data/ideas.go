@@ -30,11 +30,11 @@ type IdeaModel struct {
 func (m IdeaModel) Insert(idea *Idea) error {
 	query := `
 		INSERT INTO ideas (text, type_id)
-		VALUES($1, $2, $3)
+		VALUES($1, $2)
 		RETURNING id
 	`
 
-	args := []any{idea.Type.ID, idea.Text}
+	args := []any{idea.Text, idea.Type.ID}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
