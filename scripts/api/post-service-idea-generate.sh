@@ -11,19 +11,12 @@ load_env "$CONFIG_FILE" || exit 1
 
 auth
 
-SERVICE_ENDPOINT="/v1/service/"
+SERVICE_ENDPOINT="/v1/service/idea/generate"
 
-if [ $# -ge 1 ]; then
-    ID="$1"
-else
-    echo "no id(1) provided"
-    exit 1
-fi
-
-RESULT_URL="${API_URL}${SERVICE_ENDPOINT}${ID}"
+RESULT_URL="${API_URL}${SERVICE_ENDPOINT}"
 echo "Requesting $RESULT_URL"
-curl_args=(-s -w "\n%{http_code}" -X GET "$RESULT_URL")
-
+curl_args=(-s -w "\n%{http_code}" -X POST "$RESULT_URL")
+curl_args+=(-H "Content-Type: application/json")
 if [ -n "$TOKEN" ]; then
     curl_args+=(-H "Authorization: Bearer $TOKEN")
 fi

@@ -52,6 +52,16 @@ func (app *application) generateJWTTokenPair(user *data.User) (
 	return accessToken, refreshToken, refreshRecord, nil
 }
 
+func (app *application) readStringIDParam(r *http.Request) (string, error) {
+	params := mux.Vars(r)
+	id, ok := params["id"]
+	if !ok {
+		return "", errors.New("no id parameter")
+	}
+
+	return id, nil
+}
+
 func (app *application) readIDParam(r *http.Request) (int64, error) {
 	params := mux.Vars(r)
 	id, err := strconv.ParseInt(params["id"], 10, 64)

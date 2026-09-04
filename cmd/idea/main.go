@@ -14,8 +14,10 @@ import (
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/jsonlog"
 	"github.com/fistos3rr/ideagen/internal/prompt"
+	redis_repo "github.com/fistos3rr/ideagen/internal/redis"
 
 	_ "github.com/lib/pq"
+	"github.com/redis/go-redis/v9"
 )
 
 type config struct {
@@ -33,19 +35,27 @@ type config struct {
 		accessTokenTTL  time.Duration
 		refreshTokenTTL time.Duration
 	}
+	redis struct {
+		addr          string
+		password      string
+		ideaBufferTTL time.Duration
+	}
 }
 
 type application struct {
-	config        config
-	logger        *jsonlog.Logger
-	aiProvider    ai.Provider
-	aiConfig      ai.Config
-	models        data.Models
-	wg            sync.WaitGroup
-	promptManager *prompt.PromptManager
+	config          config
+	logger          *jsonlog.Logger
+	aiProvider      ai.Provider
+	aiConfig        ai.Config
+	models          data.Models
+	redisRepository redis_repo.Repository
+	wg              sync.WaitGroup
+	promptManager   *prompt.PromptManager
 }
 
 func (cfg *config) parseEnv() {
+	// JWT
+	// --------------------------------------------------------
 	secret := os.Getenv("JWT_SECRET_KEY")
 	if secret == "" {
 		panic("no jwt secret provided")
@@ -64,6 +74,13 @@ func (cfg *config) parseEnv() {
 		refreshTTL = 30
 	}
 
+	cfg.jwt.secret = jwtSecret
+	cfg.jwt.accessTokenTTL = time.Duration(accessTTL) * time.Minute
+	cfg.jwt.refreshTokenTTL = time.Duration(refreshTTL) * time.Hour * 24
+	// --------------------------------------------------------
+
+	// APP
+	// --------------------------------------------------------
 	strVal = os.Getenv("PORT")
 	port, err := strconv.Atoi(strVal)
 	if err != nil {
@@ -76,6 +93,12 @@ func (cfg *config) parseEnv() {
 		aiProviderType = "groq"
 	}
 
+	cfg.port = port
+	cfg.aiProviderType = aiProviderType
+	// --------------------------------------------------------
+
+	// DATABASE
+	// --------------------------------------------------------
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbHost := os.Getenv("DB_HOST")
@@ -103,41 +126,28 @@ func (cfg *config) parseEnv() {
 		maxIdleTime = "15m"
 	}
 
-	cfg.port = port
-	cfg.aiProviderType = aiProviderType
 	cfg.db.dsn = dsn
 	cfg.db.maxOpenConns = maxOpenConns
 	cfg.db.maxIdleConns = maxIdleConns
 	cfg.db.maxIdleTime = maxIdleTime
-	cfg.jwt.secret = jwtSecret
-	cfg.jwt.accessTokenTTL = time.Duration(accessTTL) * time.Minute
-	cfg.jwt.refreshTokenTTL = time.Duration(refreshTTL) * time.Hour * 24
-}
+	// --------------------------------------------------------
 
-func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.db.dsn)
+	// REDIS
+	// --------------------------------------------------------
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
+	strVal = os.Getenv("REDIS_IDEA_TTL_MINUTE")
+	ideaBufferTTL, err := strconv.Atoi(strVal)
 	if err != nil {
-		return nil, err
+		ideaBufferTTL = 15
 	}
 
-	db.SetMaxOpenConns(cfg.db.maxOpenConns)
-	db.SetMaxIdleConns(cfg.db.maxIdleConns)
-
-	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
-	if err != nil {
-		return nil, err
-	}
-	db.SetConnMaxIdleTime(duration)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err = db.PingContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
+	cfg.redis.addr = redisHost + ":" + redisPort
+	cfg.redis.password = redisPassword
+	cfg.redis.ideaBufferTTL = time.Duration(ideaBufferTTL) * time.Minute
+	// --------------------------------------------------------
 }
 
 func main() {
@@ -190,6 +200,18 @@ func main() {
 
 	logger.PrintInfo("database connection pool established", nil)
 
+	rdb, err := openRedis(cfg)
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
+	defer rdb.Close()
+
+	logger.PrintInfo("redis connection established", nil)
+
+	redisConfig := redis_repo.Config{
+		IdeaTTL: cfg.redis.ideaBufferTTL,
+	}
+
 	promptManager, err := prompt.NewPromptManager(".")
 	ok := prompt.IsDefaultErr(err)
 	if ok {
@@ -201,16 +223,58 @@ func main() {
 	}
 
 	app := &application{
-		config:        cfg,
-		logger:        logger,
-		aiProvider:    provider,
-		aiConfig:      aicfg,
-		models:        data.NewModels(db),
-		promptManager: promptManager,
+		config:          cfg,
+		logger:          logger,
+		aiProvider:      provider,
+		aiConfig:        aicfg,
+		models:          data.NewModels(db),
+		redisRepository: redis_repo.NewRepository(rdb, redisConfig),
+		promptManager:   promptManager,
 	}
 
 	err = app.serve()
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
+}
+
+func openDB(cfg config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.db.dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+
+	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+	db.SetConnMaxIdleTime(duration)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func openRedis(cfg config) (*redis.Client, error) {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.redis.addr,
+		Password: cfg.redis.password,
+		DB:       0,
+	})
+
+	ctx := context.Background()
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		return nil, err
+	}
+
+	return rdb, nil
 }

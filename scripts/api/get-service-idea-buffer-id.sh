@@ -11,7 +11,7 @@ load_env "$CONFIG_FILE" || exit 1
 
 auth
 
-SERVICE_ENDPOINT="/v1/service/"
+SERVICE_ENDPOINT="/v1/service/idea/buffer/"
 
 if [ $# -ge 1 ]; then
     ID="$1"
@@ -22,7 +22,7 @@ fi
 
 RESULT_URL="${API_URL}${SERVICE_ENDPOINT}${ID}"
 echo "Requesting $RESULT_URL"
-curl_args=(-s -w "\n%{http_code}" -X DELETE "$RESULT_URL")
+curl_args=(-s -w "\n%{http_code}" -X GET "$RESULT_URL")
 
 if [ -n "$TOKEN" ]; then
     curl_args+=(-H "Authorization: Bearer $TOKEN")
