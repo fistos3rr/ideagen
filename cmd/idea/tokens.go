@@ -97,7 +97,12 @@ func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 
 	stored, err := app.models.RefreshTokens.GetByHash(tokenHash)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.invalidAuthenticationTokenResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 
