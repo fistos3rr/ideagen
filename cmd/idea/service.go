@@ -418,6 +418,16 @@ func (app *application) chooseMyBufferIdeaHandler(w http.ResponseWriter, r *http
 		return
 	}
 
+	err = app.models.UserIdeas.Insert(user, idea)
+	if err != nil {
+		if errors.Is(err, data.ErrDuplicateRecord) {
+			app.badRequestResponse(w, r, err)
+			return
+		}
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
 	err = app.models.BufferIdeas.Clear(r.Context(), user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
