@@ -1,4 +1,4 @@
-package redis
+package data
 
 import (
 	"context"
@@ -6,26 +6,24 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fistos3rr/ideagen/internal/data"
-
 	"github.com/redis/go-redis/v9"
 )
 
 type BufferIdea struct {
-	ID      string     `json:"id"`
-	Idea    *data.Idea `json:"idea"`
-	Created time.Time  `json:"created"`
+	ID      string    `json:"id"`
+	Idea    *Idea     `json:"idea"`
+	Created time.Time `json:"created"`
 }
 
-type BufferIdeasRepository struct {
+type BufferIdeasModel struct {
 	Client        *redis.Client
 	TTL           time.Duration
 	MaxBufferSize int64
 }
 
-func (repo *BufferIdeasRepository) Add(ctx context.Context, userID int64, idea *data.Idea) (*BufferIdea, error) {
+func (m BufferIdeasModel) Add(ctx context.Context, userID int64, idea *Idea) (*BufferIdea, error) {
 	bufIdea := BufferIdea{
-		ID:      data.GenerateUUID(),
+		ID:      GenerateUUID(),
 		Idea:    idea,
 		Created: time.Now(),
 	}
@@ -37,10 +35,10 @@ func (repo *BufferIdeasRepository) Add(ctx context.Context, userID int64, idea *
 	key := fmt.Sprintf("buffer:idea:%d", userID)
 
 	// Redis transaction analogue
-	_, err = repo.Client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
+	_, err = m.Client.Pipelined(ctx, func(pipe redis.Pipeliner) error {
 		pipe.RPush(ctx, key, bufIdeaJSON)
-		pipe.LTrim(ctx, key, -repo.MaxBufferSize, -1)
-		pipe.Expire(ctx, key, repo.TTL)
+		pipe.LTrim(ctx, key, -m.MaxBufferSize, -1)
+		pipe.Expire(ctx, key, m.TTL)
 		return nil
 	})
 	if err != nil {
@@ -50,13 +48,13 @@ func (repo *BufferIdeasRepository) Add(ctx context.Context, userID int64, idea *
 	return &bufIdea, nil
 }
 
-func (repo *BufferIdeasRepository) GetAll(
+func (m BufferIdeasModel) GetAll(
 	ctx context.Context,
 	userID int64,
 ) ([]*BufferIdea, error) {
 	key := fmt.Sprintf("buffer:idea:%d", userID)
 
-	values, err := repo.Client.LRange(ctx, key, 0, -1).Result()
+	values, err := m.Client.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -76,14 +74,14 @@ func (repo *BufferIdeasRepository) GetAll(
 	return ideas, nil
 }
 
-func (repo *BufferIdeasRepository) Get(
+func (m BufferIdeasModel) Get(
 	ctx context.Context,
 	userID int64,
 	bufIdeaID string,
 ) (*BufferIdea, error) {
 	key := fmt.Sprintf("buffer:idea:%d", userID)
 
-	values, err := repo.Client.LRange(ctx, key, 0, -1).Result()
+	values, err := m.Client.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		return nil, fmt.Errorf("redis lrange: %w", err)
 	}
@@ -102,13 +100,13 @@ func (repo *BufferIdeasRepository) Get(
 	return nil, ErrRecordNotFound
 }
 
-func (repo *BufferIdeasRepository) Clear(
+func (m BufferIdeasModel) Clear(
 	ctx context.Context,
 	userID int64,
 ) error {
 	key := fmt.Sprintf("buffer:idea:%d", userID)
 
-	if err := repo.Client.Del(ctx, key).Err(); err != nil {
+	if err := m.Client.Del(ctx, key).Err(); err != nil {
 		return fmt.Errorf("redis delete buffer for user %d: %w", userID, err)
 	}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/jsonlog"
 	"github.com/fistos3rr/ideagen/internal/prompt"
-	redis_repo "github.com/fistos3rr/ideagen/internal/redis"
 
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
@@ -43,14 +42,13 @@ type config struct {
 }
 
 type application struct {
-	config          config
-	logger          *jsonlog.Logger
-	aiProvider      ai.Provider
-	aiConfig        ai.Config
-	models          data.Models
-	redisRepository redis_repo.Repository
-	wg              sync.WaitGroup
-	promptManager   *prompt.PromptManager
+	config        config
+	logger        *jsonlog.Logger
+	aiProvider    ai.Provider
+	aiConfig      ai.Config
+	models        data.Models
+	wg            sync.WaitGroup
+	promptManager *prompt.PromptManager
 }
 
 func (cfg *config) parseEnv() {
@@ -208,7 +206,7 @@ func main() {
 
 	logger.PrintInfo("redis connection established", nil)
 
-	redisConfig := redis_repo.Config{
+	dataConfig := data.Config{
 		IdeaTTL: cfg.redis.ideaBufferTTL,
 	}
 
@@ -223,13 +221,12 @@ func main() {
 	}
 
 	app := &application{
-		config:          cfg,
-		logger:          logger,
-		aiProvider:      provider,
-		aiConfig:        aicfg,
-		models:          data.NewModels(db),
-		redisRepository: redis_repo.NewRepository(rdb, redisConfig),
-		promptManager:   promptManager,
+		config:        cfg,
+		logger:        logger,
+		aiProvider:    provider,
+		aiConfig:      aicfg,
+		models:        data.NewModels(db, rdb, dataConfig),
+		promptManager: promptManager,
 	}
 
 	err = app.serve()

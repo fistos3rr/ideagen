@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/fistos3rr/ideagen/internal/data"
-	"github.com/fistos3rr/ideagen/internal/redis"
 	"github.com/fistos3rr/ideagen/internal/validator"
 )
 
@@ -350,7 +349,7 @@ func (app *application) generateMyIdeaHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	bufIdea, err := app.redisRepository.BufferIdeas.Add(r.Context(), user.ID, idea)
+	bufIdea, err := app.models.BufferIdeas.Add(r.Context(), user.ID, idea)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -370,7 +369,7 @@ func (app *application) listMyBufferIdeasHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
-	bufIdeas, err := app.redisRepository.BufferIdeas.GetAll(r.Context(), user.ID)
+	bufIdeas, err := app.models.BufferIdeas.GetAll(r.Context(), user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -400,10 +399,10 @@ func (app *application) chooseMyBufferIdeaHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	bufIdea, err := app.redisRepository.BufferIdeas.Get(r.Context(), user.ID, input.BufIdeaID)
+	bufIdea, err := app.models.BufferIdeas.Get(r.Context(), user.ID, input.BufIdeaID)
 	if err != nil {
 		switch {
-		case errors.Is(err, redis.ErrRecordNotFound):
+		case errors.Is(err, data.ErrRecordNotFound):
 			app.notFoundResponse(w, r)
 		default:
 			app.serverErrorResponse(w, r, err)
@@ -413,13 +412,13 @@ func (app *application) chooseMyBufferIdeaHandler(w http.ResponseWriter, r *http
 
 	idea := bufIdea.Idea
 
-	app.models.Ideas.Insert(idea)
+	err = app.models.Ideas.Insert(idea)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	err = app.redisRepository.BufferIdeas.Clear(r.Context(), user.ID)
+	err = app.models.BufferIdeas.Clear(r.Context(), user.ID)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -447,7 +446,7 @@ func (app *application) showMyBufferIdeaHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	bufIdea, err := app.redisRepository.BufferIdeas.Get(r.Context(), user.ID, id)
+	bufIdea, err := app.models.BufferIdeas.Get(r.Context(), user.ID, id)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

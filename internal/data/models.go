@@ -1,8 +1,12 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"time"
+
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -11,6 +15,10 @@ var (
 	ErrForeignKeyViolation = errors.New("foreign key violation")
 	ErrDuplicateRecord     = errors.New("duplicate record")
 )
+
+type Config struct {
+	IdeaTTL time.Duration
+}
 
 type Models struct {
 	Types interface {
@@ -62,14 +70,25 @@ type Models struct {
 			filters Filters,
 		) ([]*User, Metadata, error)
 	}
+	BufferIdeas interface {
+		Add(ctx context.Context, userID int64, idea *Idea) (*BufferIdea, error)
+		GetAll(ctx context.Context, userID int64) ([]*BufferIdea, error)
+		Get(ctx context.Context, userID int64, bufIdeaID string) (*BufferIdea, error)
+		Clear(ctx context.Context, userID int64) error
+	}
 }
 
-func NewModels(db *sql.DB) Models {
+func NewModels(db *sql.DB, client *redis.Client, config Config) Models {
 	return Models{
 		Types:         TypeModel{DB: db},
 		Ideas:         IdeaModel{DB: db},
 		Users:         UserModel{DB: db},
 		RefreshTokens: RefreshTokenModel{DB: db},
 		UserIdeas:     UserIdeasModel{DB: db},
+		BufferIdeas: BufferIdeasModel{
+			Client:        client,
+			TTL:           config.IdeaTTL,
+			MaxBufferSize: 10,
+		},
 	}
 }
