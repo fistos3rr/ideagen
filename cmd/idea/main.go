@@ -35,9 +35,10 @@ type config struct {
 		refreshTokenTTL time.Duration
 	}
 	redis struct {
-		addr          string
-		password      string
-		ideaBufferTTL time.Duration
+		addr            string
+		password        string
+		ideaBufferTTL   time.Duration
+		refreshTokenTTL time.Duration
 	}
 }
 
@@ -207,7 +208,8 @@ func main() {
 	logger.PrintInfo("redis connection established", nil)
 
 	dataConfig := data.Config{
-		IdeaTTL: cfg.redis.ideaBufferTTL,
+		IdeaTTL:         cfg.redis.ideaBufferTTL,
+		RefreshTokenTTL: cfg.jwt.refreshTokenTTL,
 	}
 
 	promptManager, err := prompt.NewPromptManager(".")

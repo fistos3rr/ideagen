@@ -17,7 +17,8 @@ var (
 )
 
 type Config struct {
-	IdeaTTL time.Duration
+	IdeaTTL         time.Duration
+	RefreshTokenTTL time.Duration
 }
 
 type Models struct {
@@ -80,11 +81,15 @@ type Models struct {
 
 func NewModels(db *sql.DB, client *redis.Client, config Config) Models {
 	return Models{
-		Types:         TypeModel{DB: db},
-		Ideas:         IdeaModel{DB: db},
-		Users:         UserModel{DB: db},
-		RefreshTokens: RefreshTokenModel{DB: db},
-		UserIdeas:     UserIdeasModel{DB: db},
+		Types: TypeModel{DB: db},
+		Ideas: IdeaModel{DB: db},
+		Users: UserModel{DB: db},
+		// RefreshTokens: RefreshTokenModel{DB: db},
+		RefreshTokens: BufferRefreshTokenModel{
+			Client: client,
+			TTL:    config.RefreshTokenTTL,
+		},
+		UserIdeas: UserIdeasModel{DB: db},
 		BufferIdeas: BufferIdeasModel{
 			Client:        client,
 			TTL:           config.IdeaTTL,
