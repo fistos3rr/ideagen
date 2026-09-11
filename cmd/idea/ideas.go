@@ -1,120 +1,27 @@
 package main
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
-	"github.com/fistos3rr/ideagen/internal/ai"
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/validator"
 )
 
-func (app *application) newRequest(pr string, sysPr string) error {
-	var reqErr error
-	providerType := app.config.aiProviderType
-	var req ai.Request
-	switch providerType {
-	case "groq":
-		req = ai.NewGroqRequest(app.aiConfig)
-		req.AddMessage(pr)
-		req.AddSystemMessage(sysPr)
-		reqErr = app.aiProvider.SetRequest(req)
-	default:
-		return ai.ErrSetRequest
-	}
-
-	return reqErr
-}
-
-func (app *application) generateIdea(ctx context.Context, t *data.Type) (*data.Idea, error) {
-	sysPr, pr, err := app.promptManager.GetPrompts(t.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	err = app.newRequest(pr, sysPr)
-	if errors.Is(err, ai.ErrSetRequest) {
-		app.logger.PrintFatal(err, nil)
-	} else if err != nil {
-		return nil, err
-	}
-
-	answer, err := app.aiProvider.SendRequest(ctx)
-
-	idea := &data.Idea{
-		Type: t,
-		Text: answer,
-	}
-
-	return idea, err
-}
-
-func (app *application) generateIdeaHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		TypeID     int
-		ActiveOnly bool
-	}
-
-	v := validator.New()
-	qs := r.URL.Query()
-
-	input.TypeID = app.readInt(qs, "type_id", -1, v)
-	input.ActiveOnly = app.readBool(qs, "active_only", v)
-
-	if !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
-		return
-	}
-
-	var t *data.Type
-	var err error
-	if input.TypeID == -1 {
-		types, err := app.models.Types.GetRandom(1, input.ActiveOnly)
-		if err != nil {
-			app.serverErrorResponse(w, r, err)
-			return
-		}
-		if len(types) == 0 {
-			app.notFoundResponse(w, r)
-			return
-		}
-		t = types[0]
-	} else {
-		t, err = app.models.Types.Get(int64(input.TypeID))
-		if err != nil {
-			switch {
-			case errors.Is(err, data.ErrRecordNotFound):
-				app.failedValidationResponse(w, r, map[string]string{
-					"type_id": "type with this id does not exists",
-				})
-			default:
-				app.serverErrorResponse(w, r, err)
-			}
-			return
-		}
-		if !t.IsActive {
-			app.failedValidationResponse(w, r, map[string]string{
-				"active_only": "type is not active, while active_only query set",
-			})
-			return
-		}
-	}
-
-	idea, err := app.generateIdea(r.Context(), t)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
-	err = app.writeJSON(w, http.StatusOK, envelope{"idea": idea.Text, "type_id": t.ID}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-}
-
+// showIdeaHandler godoc
+//
+// @Summary Get Idea by id
+// @Tags ideas
+// @Produce json
+// @Param id path int true "Idea ID" example(42)
+// @Success 200 {object} dto.IdeaResponse
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 404 {object} dto.ErrorResponse "Not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /ideas/{id} [get]
 func (app *application) showIdeaHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -133,17 +40,35 @@ func (app *application) showIdeaHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"idea": idea}, nil)
+	resp := dto.IdeaResponse{
+		Idea: idea,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
+// createIdeaHandler godoc
+//
+// @Summary Create Idea
+// @Description Create Idea manually (no random)
+// @Tags ideas
+// @Accept json
+// @Produce json
+// @Param request body dto.IdeaRequest true "Idea data"
+// @Success 201 {object} dto.IdeaResponse "Idea created"
+// @Header 201 {string} Location "URL of created resource, for example: /v1/ideas/42"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation failed"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /ideas [post]
 func (app *application) createIdeaHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		TypeID int64  `json:"type_id"`
-		Text   string `json:"text"`
-	}
+	var input dto.IdeaRequest
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
@@ -183,12 +108,31 @@ func (app *application) createIdeaHandler(w http.ResponseWriter, r *http.Request
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/ideas/%d", idea.ID))
 
-	err = app.writeJSON(w, http.StatusCreated, envelope{"idea": idea}, headers)
+	resp := dto.IdeaResponse{
+		Idea: idea,
+	}
+
+	err = app.writeJSON(w, http.StatusCreated, resp, headers)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
+// deleteIdeaHandler godoc
+//
+// @Summary Delete idea
+// @Description Delete idea by ID
+// @Tags ideas
+// @Produce json
+// @Param id path int true "Idea ID" example(42)
+// @Success 200 {object} dto.MessageResponse "Idea deleted successfully"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 404 {object} dto.ErrorResponse "Not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /ideas/{id} [delete]
 func (app *application) deleteIdeaHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -207,19 +151,38 @@ func (app *application) deleteIdeaHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"message": "idea successfully deleted"}, nil)
+	resp := dto.MessageResponse{
+		Message: "idea successfully deleted",
+	}
+
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
+// listIdeasHandler godoc
+//
+// @Summary Get Idea list
+// @Description Get all ideas pages with filters
+// @Tags ideas
+// @Produce json
+// @Param text query string false "Idea text"
+// @Param type_id query int false "Type ID"
+// @Param active_only query boolean false "Active only"
+// @Param page query int false "Page number" 
+// @Param page_size query int false "Page size"
+// @Param sort query string false "Sort by" Enum("id", "name", "type_id", "-id", "-name", "-type_id")
+// @Success 200 {object} dto.IdeaListResponse
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation failed"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /ideas [get]
 func (app *application) listIdeasHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Text       string
-		TypeID     int64
-		ActiveOnly bool
-		data.Filters
-	}
+	var input dto.IdeaListRequest
 
 	v := validator.New()
 	qs := r.URL.Query()
@@ -243,12 +206,34 @@ func (app *application) listIdeasHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"ideas": ideas, "metadata": metadata}, nil)
+	resp := dto.IdeaListResponse{
+		Ideas: ideas,
+		Metadata: metadata,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
+// updateIdeaHandler godoc
+//
+// @Summary Update idea 
+// @Description Patch idea's fields
+// @Tags ideas
+// @Accept json
+// @Produce json
+// @Param id path int true "Idea ID" example(42)
+// @Param request body dto.IdeaUpdateRequest false "Idea update data"
+// @Success 200 {object} dto.IdeaResponse "Idea updated"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation failed"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /ideas/{id} [patch]
 func (app *application) updateIdeaHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -267,10 +252,7 @@ func (app *application) updateIdeaHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var input struct {
-		Text   *string `json:"name"`
-		TypeID *int64  `json:"type_id"`
-	}
+	var input dto.TypeUpdateRequest
 
 	err = app.readJSON(w, r, &input)
 	if err != nil {
@@ -313,7 +295,11 @@ func (app *application) updateIdeaHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"idea": idea}, nil)
+	resp := dto.IdeaResponse{
+		Idea: idea,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

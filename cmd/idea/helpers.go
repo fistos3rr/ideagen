@@ -16,10 +16,51 @@ import (
 
 	"github.com/fistos3rr/ideagen/internal/auth"
 	"github.com/fistos3rr/ideagen/internal/data"
+	"github.com/fistos3rr/ideagen/internal/ai"
 	"github.com/fistos3rr/ideagen/internal/validator"
 
 	"github.com/gorilla/mux"
 )
+
+func (app *application) newRequest(pr string, sysPr string) error {
+	var reqErr error
+	providerType := app.config.aiProviderType
+	var req ai.Request
+	switch providerType {
+	case "groq":
+		req = ai.NewGroqRequest(app.aiConfig)
+		req.AddMessage(pr)
+		req.AddSystemMessage(sysPr)
+		reqErr = app.aiProvider.SetRequest(req)
+	default:
+		return ai.ErrSetRequest
+	}
+
+	return reqErr
+}
+
+func (app *application) generateIdea(ctx context.Context, t *data.Type) (*data.Idea, error) {
+	sysPr, pr, err := app.promptManager.GetPrompts(t.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = app.newRequest(pr, sysPr)
+	if errors.Is(err, ai.ErrSetRequest) {
+		app.logger.PrintFatal(err, nil)
+	} else if err != nil {
+		return nil, err
+	}
+
+	answer, err := app.aiProvider.SendRequest(ctx)
+
+	idea := &data.Idea{
+		Type: t,
+		Text: answer,
+	}
+
+	return idea, err
+}
 
 func (app *application) generateJWTTokenPair(user *data.User) (
 	accessToken string,
