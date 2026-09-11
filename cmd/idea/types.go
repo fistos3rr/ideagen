@@ -7,37 +7,21 @@ import (
 
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/validator"
+	"github.com/fistos3rr/ideagen/internal/api/dto"
 )
 
-func (app *application) randomTypesHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Limit      int
-		ActiveOnly bool
-	}
-
-	v := validator.New()
-	qs := r.URL.Query()
-
-	input.Limit = app.readInt(qs, "limit", 1, v)
-	input.ActiveOnly = app.readBool(qs, "active_only", v)
-
-	if !v.Valid() {
-		app.failedValidationResponse(w, r, v.Errors)
-		return
-	}
-
-	types, err := app.models.Types.GetRandom(input.Limit, input.ActiveOnly)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-		return
-	}
-
-	err = app.writeJSON(w, http.StatusOK, envelope{"types": types, "size": len(types)}, nil)
-	if err != nil {
-		app.serverErrorResponse(w, r, err)
-	}
-}
-
+// showTypeHandler godoc
+//
+// @Summary Get Type by id
+// @Tags types
+// @Produce json
+// @Param id path int true "Type ID" example(42)
+// @Success 200 {object} dto.TypeResponse
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 404 {objcet} dto.ErrorResponse "Not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /v1/types/{id} [get]
 func (app *application) showTypeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -56,7 +40,11 @@ func (app *application) showTypeHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"type": t}, nil)
+	resp := dto.TypeResponse{
+		Type: t,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
