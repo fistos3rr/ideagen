@@ -254,7 +254,7 @@ func (app *application) updateIdeaHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var input dto.TypeUpdateRequest
+	var input dto.IdeaUpdateRequest
 
 	err = app.readJSON(w, r, &input)
 	if err != nil {

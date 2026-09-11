@@ -19,7 +19,7 @@ type TypeListRequest struct {
 
 type TypeListResponse struct {
 	Types []*data.Type `json:"types"`
-	Metadata
+	Metadata data.Metadata `json:"metadata"`
 }
 
 type TypeUpdateRequest struct {
@@ -45,10 +45,6 @@ type IdeaListRequest struct {
 
 type IdeaListResponse struct {
 	Ideas []*data.Idea `json:"ideas"`
-	Metadata
-}
-
-type Metadata struct {
 	Metadata data.Metadata `json:"metadata"`
 }
 
