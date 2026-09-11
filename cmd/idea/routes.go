@@ -24,16 +24,15 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.showTypeHandler)).Methods("GET")
 	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.deleteTypeHandler)).Methods("DELETE")
 	router.HandleFunc("/v1/types", app.requireUserRole("Admin", app.listTypesHandler)).Methods("GET")
-	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.updateTypeHandler)).Methods("UPDATE")
+	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.updateTypeHandler)).Methods("PATCH")
 
 	router.HandleFunc("/v1/ideas", app.requireUserRole("Admin", app.createIdeaHandler)).Methods("POST")
 	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.showIdeaHandler)).Methods("GET")
 	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.deleteIdeaHandler)).Methods("DELETE")
 	router.HandleFunc("/v1/ideas", app.requireUserRole("Admin", app.listIdeasHandler)).Methods("GET")
-	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.updateIdeaHandler)).Methods("UPDATE")
+	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.updateIdeaHandler)).Methods("PATCH")
 
-	router.HandleFunc("/v1/user-idea", app.requireUserRole("Admin", app.createUserIdeaHandler)).Methods("POST")
-
+	router.HandleFunc("/v1/service/useridea", app.requireUserRole("Admin", app.createUserIdeaHandler)).Methods("POST")
 	router.HandleFunc("/v1/service/me", app.requireAuthenticatedUser(app.showMeHandler)).Methods("GET")
 	router.HandleFunc("/v1/service/ideas", app.requireAuthenticatedUser(app.listMyIdeasHandler)).Methods("GET")
 	router.HandleFunc("/v1/service/ideas/{id}", app.requireAuthenticatedUser(app.showMyIdeaHandler)).Methods("GET")
@@ -44,7 +43,7 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/service/idea/buffer", app.requireAuthenticatedUser(app.listMyBufferIdeasHandler)).Methods("GET")
 	router.HandleFunc("/v1/service/idea/buffer", app.requireAuthenticatedUser(app.chooseMyBufferIdeaHandler)).Methods("POST")
 
-	router.HandleFunc("/v1/register", app.registerUserHandler).Methods("POST")
+	router.HandleFunc("/v1/auth/register", app.registerUserHandler).Methods("POST")
 	router.HandleFunc("/v1/auth/login", app.loginUserHandler).Methods("POST")
 	router.HandleFunc("/v1/auth/logout", app.requireAuthenticatedUser(app.logoutHandler)).Methods("POST")
 	router.HandleFunc("/v1/auth/refresh", app.refreshHandler).Methods("POST")

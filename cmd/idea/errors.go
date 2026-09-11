@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/fistos3rr/ideagen/internal/api/dto"
 )
 
 func (app *application) logError(r *http.Request, err error) {
@@ -16,11 +18,13 @@ func (app *application) errorResponse(
 	w http.ResponseWriter,
 	r *http.Request,
 	status int,
-	message any,
+	message string,
 ) {
-	env := envelope{"error": message}
+	resp := dto.ErrorResponse{
+		Error: message,
+	}
 
-	err := app.writeJSON(w, status, env, nil)
+	err := app.writeJSON(w, status, resp, nil)
 	if err != nil {
 		app.logError(r, err)
 		w.WriteHeader(500)
@@ -69,7 +73,15 @@ func (app *application) failedValidationResponse(
 	r *http.Request,
 	errors map[string]string,
 ) {
-	app.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
+	resp := dto.ValidationErrorResponse{
+		Error: errors,
+	}
+
+	err := app.writeJSON(w, http.StatusUnprocessableEntity, resp, nil)
+	if err != nil {
+		app.logError(r, err)
+		w.WriteHeader(500)
+	}
 }
 
 func (app *application) editConflictResponse(

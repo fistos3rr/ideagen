@@ -13,6 +13,65 @@ import (
 	"github.com/fistos3rr/ideagen/internal/api/dto"
 )
 
+// registerUserHandler godoc
+//
+// @Summary Register user
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dto.UserCredentials true "Credentials"
+// @Success 201 {object} dto.MessageResponse "User created"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation failed"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /auth/register [post]
+func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
+	var input dto.UserCredentials
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	user := &data.User{
+		Email: input.Email,
+	}
+
+	err = user.Password.Set(input.Password)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+
+	if data.ValidateUser(v, user); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Users.Insert(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrDuplicateEmail):
+			v.AddError("email", "a user with this email address already exists")
+			app.failedValidationResponse(w, r, v.Errors)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	}
+
+	resp := dto.MessageResponse{
+		Message: "user created successfully",
+	}
+	err = app.writeJSON(w, http.StatusCreated, resp, nil)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+}
+
 // loginUserHandler godoc
 //
 // @Summary Login user
@@ -20,8 +79,14 @@ import (
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} dto.LoginResponse
-// @Router /v1/auth/login [post]
+// @Param request body dto.LoginRequest true "User login data"
+// @Success 200 {object} dto.LoginResponse "Successful authentication"
+// @Header 200 {string} Set-Cookie "refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Path=/"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Invalid credentials"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation error"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /auth/login [post]
 func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input dto.LoginRequest
 
@@ -89,6 +154,18 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 	app.writeJSON(w, http.StatusOK, resp, nil)
 }
 
+// refreshHandler godoc
+//
+// @Summary Refresh access token
+// @Description Trade refresh-token from HttpOnly-cookie on new access token.
+// @Description
+// @Desctiption Read cookie `refresh_token`. If there is no cookie or token expired - returns 401.
+// @Tags auth
+// @Produce json
+// @Success 200 {object} dto.LoginResponse "New access-token"
+// @Failure 401 {object} dto.ErrorResponse "Invalid token"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /auth/refresh [post]
 func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
@@ -153,9 +230,25 @@ func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  newRecord.ExpiresAt,
 	})
 
-	app.writeJSON(w, http.StatusOK, envelope{"access_token": newAccess}, nil)
+	resp := dto.LoginResponse {
+		AccessToken: newAccess,	
+	}
+
+	app.writeJSON(w, http.StatusOK, resp, nil)
 }
 
+// logoutHandler godoc
+//
+// @Summary Logout
+// @Desctiption Clears refresh token from cookie, delete session
+// @Tags auth
+// @Produce json
+// @Success 200 {object} dto.MessageResponse
+// @Failuer 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /auth/logout [post]
 func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err == nil {
@@ -174,5 +267,8 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(-1 * time.Hour),
 	})
 
-	app.writeJSON(w, http.StatusOK, envelope{"message": "successfully logout"}, nil)
+	resp := dto.MessageResponse{
+		Message: "successfully logout",
+	}
+	app.writeJSON(w, http.StatusOK, resp, nil)
 }
