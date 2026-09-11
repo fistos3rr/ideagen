@@ -20,8 +20,14 @@ import (
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} dto.LoginResponse
-// @Router /v1/auth/login [post]
+// @Param request body dto.LoginRequest true "User login data"
+// @Success 200 {object} dto.LoginResponse "Successful authentication"
+// @Header 200 {string} Set-Cookie "refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Path=/"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Invalid credentials"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation error"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /auth/login [post]
 func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input dto.LoginRequest
 
