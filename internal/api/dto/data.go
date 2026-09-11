@@ -23,6 +23,6 @@ type TypeListResponse struct {
 }
 
 type TypeUpdateRequest struct {
-	Name     *string `json:"name"`
-	IsActive *bool  `json:"is_active"`
+	Name     *string `json:"name,omitempty"`
+	IsActive *bool  `json:"is_active,omitempty"`
 }

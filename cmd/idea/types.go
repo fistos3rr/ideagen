@@ -20,7 +20,7 @@ import (
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
-// @Failure 404 {objcet} dto.ErrorResponse "Not found"
+// @Failure 404 {object} dto.ErrorResponse "Not found"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /types/{id} [get]
@@ -130,7 +130,7 @@ func (app *application) createTypeHandler(w http.ResponseWriter, r *http.Request
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
-// @Failure 404 {objcet} dto.ErrorResponse "Not found"
+// @Failure 404 {object} dto.ErrorResponse "Not found"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /types/{id} [delete]
@@ -178,7 +178,7 @@ func (app *application) deleteTypeHandler(w http.ResponseWriter, r *http.Request
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
-// @Failure 404 {objcet} dto.ErrorResponse "Not found"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation failed"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Security BearerAuth
 // @Router /types [get]
