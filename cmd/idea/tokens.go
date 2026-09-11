@@ -23,10 +23,7 @@ import (
 // @Success 200 {object} dto.LoginResponse
 // @Router /v1/auth/login [post]
 func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+	var input dto.LoginRequest
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
@@ -85,7 +82,11 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		Expires:  refreshRecord.ExpiresAt,
 	})
 
-	app.writeJSON(w, http.StatusOK, envelope{"access_token": accessToken}, nil)
+	resp := dto.LoginResponse{
+		AccessToken: accessToken,
+	}
+
+	app.writeJSON(w, http.StatusOK, resp, nil)
 }
 
 func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
