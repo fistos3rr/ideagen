@@ -10,8 +10,18 @@ import (
 	"github.com/fistos3rr/ideagen/internal/auth"
 	"github.com/fistos3rr/ideagen/internal/data"
 	"github.com/fistos3rr/ideagen/internal/validator"
+	"github.com/fistos3rr/ideagen/internal/api/dto"
 )
 
+// loginUserHandler godoc
+//
+// @Summary Login user
+// @Description User authentication using email and password, and returns JWT-token.
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.LoginResponse
+// @Router /v1/auth/login [post]
 func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Email    string `json:"email"`

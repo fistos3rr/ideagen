@@ -5,6 +5,7 @@ import (
 )
 
 // healthcheckHandler godoc
+//
 // @Summary Check health
 // @Tags helper
 // @Produce json
