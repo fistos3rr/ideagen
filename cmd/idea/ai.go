@@ -20,7 +20,7 @@ import (
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 403 {object} dto.ErrorResponse "Not enough privilegies"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
-// @Router /v1/ask [post]
+// @Router /ask [post]
 func (app *application) aiHandler(w http.ResponseWriter, r *http.Request) {
 	var req dto.AskRequest
 
