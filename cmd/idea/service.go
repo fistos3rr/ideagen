@@ -288,7 +288,7 @@ func (app *application) createUserIdeaHandler(w http.ResponseWriter, r *http.Req
 // @Description Generates random ideas and push them into buffer
 // @Tags service
 // @Produce json
-// @Success 201 {object} dto.BufferIdeaResponse "Idea generated in buffer"
+// @Success 200 {object} dto.BufferIdeaResponse "Idea generated in buffer"
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
