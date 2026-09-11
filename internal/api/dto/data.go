@@ -52,7 +52,7 @@ type Metadata struct {
 	Metadata data.Metadata `json:"metadata"`
 }
 
-type TypeUpdateRequest struct {
-	Text   *string `json:"name"`
-	TypeID *int64  `json:"type_id"`
+type IdeaUpdateRequest struct {
+	Text   *string `json:"name,omitempty"`
+	TypeID *int64  `json:"type_id,omitempty"`
 }
