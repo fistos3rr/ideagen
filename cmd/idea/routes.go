@@ -4,6 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "github.com/fistos3rr/ideagen/docs"
 )
 
 func (app *application) routes() http.Handler {
@@ -45,5 +48,16 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/auth/logout", app.requireAuthenticatedUser(app.logoutHandler)).Methods("POST")
 	router.HandleFunc("/v1/auth/refresh", app.refreshHandler).Methods("POST")
 
-	return app.recoverPanic(app.authenticate(router))
+	apiHandler := app.recoverPanic(app.authenticate(router))
+
+	swaggerMux := http.NewServeMux()
+	swaggerMux.Handle("/swagger/", httpSwagger.WrapHandler)
+
+	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/swagger/") {
+			swaggerMux.ServeHTTP(w, r)
+			return
+		}
+		apiHandler.ServeHTTP(w, r)
+	})
 }

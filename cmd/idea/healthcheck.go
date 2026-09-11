@@ -4,6 +4,12 @@ import (
 	"net/http"
 )
 
+// healthcheckHandler godoc
+// @Summary Check health
+// @Tags helper
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Router /health [get]
 func (app *application) healthcheckHandler(
 	w http.ResponseWriter,
 	r *http.Request,

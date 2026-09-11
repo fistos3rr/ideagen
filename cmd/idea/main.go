@@ -1,3 +1,14 @@
+// Package main
+//
+// @title Idea API
+// @version 1.0
+// @description API for work with ideas
+// @BasePath /v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description JWT access token. Example: "Bearer eyJhbGci0i..."
 package main
 
 import (
@@ -50,6 +61,96 @@ type application struct {
 	models        data.Models
 	wg            sync.WaitGroup
 	promptManager *prompt.PromptManager
+}
+
+func main() {
+	// Logger init
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
+
+	// Config init
+	var cfg config
+	cfg.parseEnv()
+	cfg.env = "development"
+
+	logger.PrintInfo("jwt token config", map[string]string{
+		"access_token_ttl":  string(int(cfg.jwt.accessTokenTTL / time.Minute)),
+		"refresh_token_ttl": string(int(cfg.jwt.refreshTokenTTL / (24 * time.Hour))),
+	})
+
+// 	logger.PrintInfo("database config", map[string]string{
+// 		"dsn": cfg.db.dsn,
+// 	})
+
+	// Ai provider init
+	aicfg := ai.Config{
+		APIKey: os.Getenv("AI_API_KEY"),
+		Model:  os.Getenv("AI_MODEL"),
+		APIURL: os.Getenv("AI_API_URL"),
+	}
+	aiLogData := map[string]string{
+		"api_url": aicfg.APIURL,
+		"model":   aicfg.Model,
+	}
+	if cfg.env == "development" {
+		aiLogData["api_key"] = aicfg.APIKey
+	}
+	var provider ai.Provider
+	switch cfg.aiProviderType {
+	case "groq":
+		logger.PrintInfo("running groq ai provider", aiLogData)
+		provider = ai.NewGroqClient(aicfg)
+	default:
+		logger.PrintFatal(errors.New("unknown provider"), map[string]string{
+			"provider": cfg.aiProviderType,
+		})
+	}
+
+	// Data init
+	db, err := openDB(cfg)
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
+	defer db.Close()
+	logger.PrintInfo("database connection pool established", nil)
+
+	rdb, err := openRedis(cfg)
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
+	defer rdb.Close()
+	logger.PrintInfo("redis connection established", nil)
+
+	dataConfig := data.Config{
+		IdeaTTL:         cfg.redis.ideaBufferTTL,
+		RefreshTokenTTL: cfg.jwt.refreshTokenTTL,
+	}
+
+	// Prompts manager init
+	promptManager, err := prompt.NewPromptManager(".")
+	ok := prompt.IsDefaultErr(err)
+	if ok {
+		logger.PrintInfo("initializing prompt manager", map[string]string{
+			"files": err.Error(),
+		})
+	} else if err != nil {
+		panic(err)
+	}
+
+	// Application init
+	app := &application{
+		config:        cfg,
+		logger:        logger,
+		aiProvider:    provider,
+		aiConfig:      aicfg,
+		models:        data.NewModels(db, rdb, dataConfig),
+		promptManager: promptManager,
+	}
+
+	// Starting server
+	err = app.serve()
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
 }
 
 func (cfg *config) parseEnv() {
@@ -147,96 +248,6 @@ func (cfg *config) parseEnv() {
 	cfg.redis.addr = redisHost + ":" + redisPort
 	cfg.redis.password = redisPassword
 	cfg.redis.ideaBufferTTL = time.Duration(ideaBufferTTL) * time.Minute
-}
-
-func main() {
-	// Logger init
-	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-
-	// Config init
-	var cfg config
-	cfg.parseEnv()
-	cfg.env = "development"
-
-	logger.PrintInfo("jwt token config", map[string]string{
-		"access_token_ttl":  string(int(cfg.jwt.accessTokenTTL / time.Minute)),
-		"refresh_token_ttl": string(int(cfg.jwt.refreshTokenTTL / (24 * time.Hour))),
-	})
-
-// 	logger.PrintInfo("database config", map[string]string{
-// 		"dsn": cfg.db.dsn,
-// 	})
-
-	// Ai provider init
-	aicfg := ai.Config{
-		APIKey: os.Getenv("AI_API_KEY"),
-		Model:  os.Getenv("AI_MODEL"),
-		APIURL: os.Getenv("AI_API_URL"),
-	}
-	aiLogData := map[string]string{
-		"api_url": aicfg.APIURL,
-		"model":   aicfg.Model,
-	}
-	if cfg.env == "development" {
-		aiLogData["api_key"] = aicfg.APIKey
-	}
-	var provider ai.Provider
-	switch cfg.aiProviderType {
-	case "groq":
-		logger.PrintInfo("running groq ai provider", aiLogData)
-		provider = ai.NewGroqClient(aicfg)
-	default:
-		logger.PrintFatal(errors.New("unknown provider"), map[string]string{
-			"provider": cfg.aiProviderType,
-		})
-	}
-
-	// Data init
-	db, err := openDB(cfg)
-	if err != nil {
-		logger.PrintFatal(err, nil)
-	}
-	defer db.Close()
-	logger.PrintInfo("database connection pool established", nil)
-
-	rdb, err := openRedis(cfg)
-	if err != nil {
-		logger.PrintFatal(err, nil)
-	}
-	defer rdb.Close()
-	logger.PrintInfo("redis connection established", nil)
-
-	dataConfig := data.Config{
-		IdeaTTL:         cfg.redis.ideaBufferTTL,
-		RefreshTokenTTL: cfg.jwt.refreshTokenTTL,
-	}
-
-	// Prompts manager init
-	promptManager, err := prompt.NewPromptManager(".")
-	ok := prompt.IsDefaultErr(err)
-	if ok {
-		logger.PrintInfo("initializing prompt manager", map[string]string{
-			"files": err.Error(),
-		})
-	} else if err != nil {
-		panic(err)
-	}
-
-	// Application init
-	app := &application{
-		config:        cfg,
-		logger:        logger,
-		aiProvider:    provider,
-		aiConfig:      aicfg,
-		models:        data.NewModels(db, rdb, dataConfig),
-		promptManager: promptManager,
-	}
-
-	// Starting server
-	err = app.serve()
-	if err != nil {
-		logger.PrintFatal(err, nil)
-	}
 }
 
 func openDB(cfg config) (*sql.DB, error) {
