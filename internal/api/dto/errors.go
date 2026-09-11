@@ -5,5 +5,5 @@ type ErrorResponse struct {
 }
 
 type ValidationErrorResponse struct {
-	Error map[string]string `json:"error" example:"{\"email\":\"must be a valid email address\"}"`
+	Error map[string]string `json:"error" example:{"email":"must be a valid email address"}`
 }
