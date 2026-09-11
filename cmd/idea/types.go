@@ -21,7 +21,7 @@ import (
 // @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
 // @Failure 404 {objcet} dto.ErrorResponse "Not found"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
-// @Router /v1/types/{id} [get]
+// @Router /types/{id} [get]
 func (app *application) showTypeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
