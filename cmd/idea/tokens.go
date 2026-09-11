@@ -187,7 +187,7 @@ func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dto.MessageResponse
 // @Failuer 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
-// @Router /auth/refresh [post]
+// @Router /auth/logout [post]
 func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err == nil {
