@@ -53,6 +53,7 @@ type application struct {
 }
 
 func (cfg *config) parseEnv() {
+	// --------------------------------------------------------
 	// JWT
 	// --------------------------------------------------------
 	secret := os.Getenv("JWT_SECRET_KEY")
@@ -76,8 +77,8 @@ func (cfg *config) parseEnv() {
 	cfg.jwt.secret = jwtSecret
 	cfg.jwt.accessTokenTTL = time.Duration(accessTTL) * time.Minute
 	cfg.jwt.refreshTokenTTL = time.Duration(refreshTTL) * time.Hour * 24
-	// --------------------------------------------------------
 
+	// --------------------------------------------------------
 	// APP
 	// --------------------------------------------------------
 	strVal = os.Getenv("PORT")
@@ -94,8 +95,8 @@ func (cfg *config) parseEnv() {
 
 	cfg.port = port
 	cfg.aiProviderType = aiProviderType
-	// --------------------------------------------------------
 
+	// --------------------------------------------------------
 	// DATABASE
 	// --------------------------------------------------------
 	dbUser := os.Getenv("DB_USER")
@@ -129,8 +130,8 @@ func (cfg *config) parseEnv() {
 	cfg.db.maxOpenConns = maxOpenConns
 	cfg.db.maxIdleConns = maxIdleConns
 	cfg.db.maxIdleTime = maxIdleTime
-	// --------------------------------------------------------
 
+	// --------------------------------------------------------
 	// REDIS
 	// --------------------------------------------------------
 	redisHost := os.Getenv("REDIS_HOST")
@@ -146,12 +147,13 @@ func (cfg *config) parseEnv() {
 	cfg.redis.addr = redisHost + ":" + redisPort
 	cfg.redis.password = redisPassword
 	cfg.redis.ideaBufferTTL = time.Duration(ideaBufferTTL) * time.Minute
-	// --------------------------------------------------------
 }
 
 func main() {
+	// Logger init
 	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
+	// Config init
 	var cfg config
 	cfg.parseEnv()
 	cfg.env = "development"
@@ -161,25 +163,23 @@ func main() {
 		"refresh_token_ttl": string(int(cfg.jwt.refreshTokenTTL / (24 * time.Hour))),
 	})
 
-	logger.PrintInfo("database config", map[string]string{
-		"dsn": cfg.db.dsn,
-	})
+// 	logger.PrintInfo("database config", map[string]string{
+// 		"dsn": cfg.db.dsn,
+// 	})
 
+	// Ai provider init
 	aicfg := ai.Config{
 		APIKey: os.Getenv("AI_API_KEY"),
 		Model:  os.Getenv("AI_MODEL"),
 		APIURL: os.Getenv("AI_API_URL"),
 	}
-
 	aiLogData := map[string]string{
 		"api_url": aicfg.APIURL,
 		"model":   aicfg.Model,
 	}
-
 	if cfg.env == "development" {
 		aiLogData["api_key"] = aicfg.APIKey
 	}
-
 	var provider ai.Provider
 	switch cfg.aiProviderType {
 	case "groq":
@@ -191,12 +191,12 @@ func main() {
 		})
 	}
 
+	// Data init
 	db, err := openDB(cfg)
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
 	defer db.Close()
-
 	logger.PrintInfo("database connection pool established", nil)
 
 	rdb, err := openRedis(cfg)
@@ -204,7 +204,6 @@ func main() {
 		logger.PrintFatal(err, nil)
 	}
 	defer rdb.Close()
-
 	logger.PrintInfo("redis connection established", nil)
 
 	dataConfig := data.Config{
@@ -212,6 +211,7 @@ func main() {
 		RefreshTokenTTL: cfg.jwt.refreshTokenTTL,
 	}
 
+	// Prompts manager init
 	promptManager, err := prompt.NewPromptManager(".")
 	ok := prompt.IsDefaultErr(err)
 	if ok {
@@ -222,6 +222,7 @@ func main() {
 		panic(err)
 	}
 
+	// Application init
 	app := &application{
 		config:        cfg,
 		logger:        logger,
@@ -231,6 +232,7 @@ func main() {
 		promptManager: promptManager,
 	}
 
+	// Starting server
 	err = app.serve()
 	if err != nil {
 		logger.PrintFatal(err, nil)
