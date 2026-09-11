@@ -95,6 +95,18 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 	app.writeJSON(w, http.StatusOK, resp, nil)
 }
 
+// refreshHandler godoc
+//
+// @Summary Refresh access token
+// @Description Trade refresh-token from HttpOnly-cookie on new access token.
+// @Description
+// @Desctiption Read cookie `refresh_token`. If there is no cookie or token expired - returns 401.
+// @Tags auth
+// @Produce json
+// @Success 200 {object} dto.LoginResponse "New access-token"
+// @Failure 401 {object} dto.ErrorResponse "Invalid token"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /auth/refresh [post]
 func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil {
@@ -159,9 +171,23 @@ func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  newRecord.ExpiresAt,
 	})
 
-	app.writeJSON(w, http.StatusOK, envelope{"access_token": newAccess}, nil)
+	resp := dto.LoginResponse {
+		AccessToken: newAccess,	
+	}
+
+	app.writeJSON(w, http.StatusOK, resp, nil)
 }
 
+// logoutHandler godoc
+//
+// @Summary Logout
+// @Desctiption Clears refresh token from cookie, delete session
+// @Tags auth
+// @Produce json
+// @Success 200 {object} dto.MessageResponse
+// @Failuer 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Router /auth/refresh [post]
 func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("refresh_token")
 	if err == nil {
@@ -180,5 +206,8 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(-1 * time.Hour),
 	})
 
-	app.writeJSON(w, http.StatusOK, envelope{"message": "successfully logout"}, nil)
+	resp := dto.MessageResponse{
+		Message: "successfully logout",
+	}
+	app.writeJSON(w, http.StatusOK, resp, nil)
 }
