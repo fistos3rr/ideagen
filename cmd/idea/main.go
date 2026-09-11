@@ -9,6 +9,8 @@
 // @in header
 // @name Authorization
 // @description JWT access token. Example: "Bearer eyJhbGci0i..."
+//
+//go:generate swag init -g main.go -d . --parseDependency --parseInternal -o ../../docs
 package main
 
 import (
