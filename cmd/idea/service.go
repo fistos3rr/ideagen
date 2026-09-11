@@ -456,7 +456,7 @@ func (app *application) chooseMyBufferIdeaHandler(w http.ResponseWriter, r *http
 // @Summary Get Idea from buffer by UUID
 // @Tags service
 // @Produce json
-// @Param id path int true "Buffer Idea UUID"
+// @Param id path string true "Buffer Idea UUID"
 // @Success 200 {object} dto.BufferIdeaResponse
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 401 {object} dto.ErrorResponse "Unauthorized"
