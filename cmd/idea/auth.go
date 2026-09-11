@@ -245,6 +245,7 @@ func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Success 200 {object} dto.MessageResponse
 // @Failuer 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
 // @Router /auth/logout [post]
 func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
