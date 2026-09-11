@@ -3,8 +3,10 @@ package main
 import (
 	"errors"
 	"net/http"
+	"fmt"
 
 	"github.com/fistos3rr/ideagen/internal/data"
+	"github.com/fistos3rr/ideagen/internal/api/dto"
 	"github.com/fistos3rr/ideagen/internal/validator"
 )
 

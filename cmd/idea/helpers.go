@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
