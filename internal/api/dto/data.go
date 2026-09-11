@@ -103,7 +103,7 @@ type BufferIdeaResponse struct {
 }
 
 type BufferIdeaListResponse struct {
-	BufferIdea []*data.BufferIdea `json:"buffer_ideas"`	
+	BufferIdeas []*data.BufferIdea `json:"buffer_ideas"`	
 }
 
 type BufferIdeaRequest struct {
