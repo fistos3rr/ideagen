@@ -59,7 +59,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	resp := dto.MessageResponse{
-		Message: "user created successfully"
+		Message: "user created successfully",
 	}
 	err = app.writeJSON(w, http.StatusCreated, resp, nil)
 	if err != nil {
