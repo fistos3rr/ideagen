@@ -18,9 +18,11 @@ import (
 // @Param id path int true "Type ID" example(42)
 // @Success 200 {object} dto.TypeResponse
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
 // @Failure 404 {objcet} dto.ErrorResponse "Not found"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
 // @Router /types/{id} [get]
 func (app *application) showTypeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)

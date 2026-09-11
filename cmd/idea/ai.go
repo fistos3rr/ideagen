@@ -18,8 +18,10 @@ import (
 // @Param request body dto.AskRequest true "Message to AI"
 // @Success 200 {object} dto.AskResponse "Success answer"
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
 // @Failure 403 {object} dto.ErrorResponse "Not enough privilegies"
 // @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
 // @Router /ask [post]
 func (app *application) aiHandler(w http.ResponseWriter, r *http.Request) {
 	var req dto.AskRequest
