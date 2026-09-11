@@ -52,11 +52,25 @@ func (app *application) showTypeHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// createTypeHandler godoc
+//
+// @Summary Create Type
+// @Description Create Type for Ideas
+// @Tags types
+// @Accept json
+// @Produce json
+// @Param request body dto.TypeRequest true "Type data"
+// @Success 201 {object} dto.TypeResponse "Type created"
+// @Header 201 {string} Location "URL of created resource, for example: /v1/types/42"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation failed"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /types [post]
 func (app *application) createTypeHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Name     string `json:"name"`
-		IsActive *bool  `json:"is_active"`
-	}
+	var input dto.TypeRequest
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
@@ -96,12 +110,30 @@ func (app *application) createTypeHandler(w http.ResponseWriter, r *http.Request
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/types/%d", t.ID))
 
-	err = app.writeJSON(w, http.StatusCreated, envelope{"type": t}, headers)
+	resp := dto.TypeResponse{
+		Type: t,
+	}
+	err = app.writeJSON(w, http.StatusCreated, resp, headers)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
+// deleteTypeHandler godoc
+//
+// @Summary Delete type
+// @Description Delete type by ID
+// @Tags types
+// @Produce json
+// @Param id path int true "Type ID" example(42)
+// @Success 200 {object} dto.MessageResponse "Type deleted successfully"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 404 {objcet} dto.ErrorResponse "Not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /types/{id} [delete]
 func (app *application) deleteTypeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -122,18 +154,36 @@ func (app *application) deleteTypeHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"message": "type successfully deleted"}, nil)
+	resp := dto.MessageResponse{
+		Message: "type successfully deleted",
+	}
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
+// listTypesHandler godoc
+//
+// @Summary Get Type list
+// @Description Get all types pages with filters
+// @Tags types
+// @Produce json
+// @Param name query string false "Type name"
+// @Param active_only query boolean false "Active only"
+// @Param page query int false "Page number" 
+// @Param page_size query int false "Page size"
+// @Param sort query string false "Sort by" Enum(id, -id, name, -name)
+// @Success 200 {object} dto.TypeListResponse
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 404 {objcet} dto.ErrorResponse "Not found"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /types [get]
 func (app *application) listTypesHandler(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Name       string
-		ActiveOnly bool
-		data.Filters
-	}
+	var input dto.TypeListRequest
 
 	v := validator.New()
 	qs := r.URL.Query()
@@ -156,12 +206,34 @@ func (app *application) listTypesHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"types": types, "metadata": metadata}, nil)
+	resp := dto.TypeListResponse{
+		Types: types,
+		Metadata: metadata,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
 }
 
+// updateTypeHandler godoc
+//
+// @Summary Update type 
+// @Description Update type fields, for example change IsActive status
+// @Tags types
+// @Accept json
+// @Produce json
+// @Param id path int true "Type ID" example(42)
+// @Param request body dto.TypeUpdateRequest false "Type update data"
+// @Success 200 {object} dto.TypeResponse "Type updated"
+// @Failure 400 {object} dto.ErrorResponse "Bad request"
+// @Failure 401 {object} dto.ErrorResponse "Unauthorized"
+// @Failure 403 {object} dto.ErrorResponse "Not enough privilleges"
+// @Failure 422 {object} dto.ValidationErrorResponse "Validation failed"
+// @Failure 500 {object} dto.ErrorResponse "Internal server error"
+// @Security BearerAuth
+// @Router /types/{id} [patch]
 func (app *application) updateTypeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -180,10 +252,7 @@ func (app *application) updateTypeHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var input struct {
-		Name     *string `json:"name"`
-		IsActive *bool   `json:"is_active"`
-	}
+	var input dto.TypeUpdateRequest
 
 	err = app.readJSON(w, r, &input)
 	if err != nil {
@@ -216,7 +285,11 @@ func (app *application) updateTypeHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"type": t}, nil)
+	resp := TypeResponse{
+		Type: t,
+	}
+
+	err = app.writeJSON(w, http.StatusOK, resp, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}

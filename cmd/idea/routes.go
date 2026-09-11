@@ -20,11 +20,11 @@ func (app *application) routes() http.Handler {
 
 	router.HandleFunc("/v1/ask", app.requireUserRole("Admin", app.aiHandler)).Methods("POST")//
 
-	router.HandleFunc("/v1/types", app.requireUserRole("Admin", app.createTypeHandler)).Methods("POST")
-	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.showTypeHandler)).Methods("GET")
-	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.deleteTypeHandler)).Methods("DELETE")
-	router.HandleFunc("/v1/types", app.requireUserRole("Admin", app.listTypesHandler)).Methods("GET")
-	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.updateTypeHandler)).Methods("PATCH")
+	router.HandleFunc("/v1/types", app.requireUserRole("Admin", app.createTypeHandler)).Methods("POST")//
+	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.showTypeHandler)).Methods("GET")//
+	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.deleteTypeHandler)).Methods("DELETE")//
+	router.HandleFunc("/v1/types", app.requireUserRole("Admin", app.listTypesHandler)).Methods("GET")//
+	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.updateTypeHandler)).Methods("PATCH")//
 
 	router.HandleFunc("/v1/ideas", app.requireUserRole("Admin", app.createIdeaHandler)).Methods("POST")
 	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.showIdeaHandler)).Methods("GET")
