@@ -10,6 +10,7 @@ RUN go mod download
 # source code
 COPY internal/ ./internal/
 COPY cmd/idea/ ./cmd/idea/
+COPY docs/ ./docs/
 
 # Building
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o idea ./cmd/idea

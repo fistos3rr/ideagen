@@ -2,8 +2,12 @@ package main
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
+
+	httpSwagger "github.com/swaggo/http-swagger"
+	_ "github.com/fistos3rr/ideagen/docs"
 )
 
 func (app *application) routes() http.Handler {
@@ -21,14 +25,12 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.deleteTypeHandler)).Methods("DELETE")
 	router.HandleFunc("/v1/types", app.requireUserRole("Admin", app.listTypesHandler)).Methods("GET")
 	router.HandleFunc("/v1/types/{id}", app.requireUserRole("Admin", app.updateTypeHandler)).Methods("UPDATE")
-	//router.HandleFunc("/v1/random/types", app.requireUserRole("Admin", app.randomTypesHandler)).Methods("GET")
 
 	router.HandleFunc("/v1/ideas", app.requireUserRole("Admin", app.createIdeaHandler)).Methods("POST")
 	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.showIdeaHandler)).Methods("GET")
 	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.deleteIdeaHandler)).Methods("DELETE")
 	router.HandleFunc("/v1/ideas", app.requireUserRole("Admin", app.listIdeasHandler)).Methods("GET")
 	router.HandleFunc("/v1/ideas/{id}", app.requireUserRole("Admin", app.updateIdeaHandler)).Methods("UPDATE")
-	//router.HandleFunc("/v1/idea", app.requireUserRole("Admin", app.generateIdeaHandler)).Methods("GET")
 
 	router.HandleFunc("/v1/user-idea", app.requireUserRole("Admin", app.createUserIdeaHandler)).Methods("POST")
 
@@ -47,5 +49,16 @@ func (app *application) routes() http.Handler {
 	router.HandleFunc("/v1/auth/logout", app.requireAuthenticatedUser(app.logoutHandler)).Methods("POST")
 	router.HandleFunc("/v1/auth/refresh", app.refreshHandler).Methods("POST")
 
-	return app.recoverPanic(app.authenticate(router))
+	apiHandler := app.recoverPanic(app.authenticate(router))
+
+	swaggerMux := http.NewServeMux()
+	swaggerMux.Handle("/swagger/", httpSwagger.WrapHandler)
+
+	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/swagger/") {
+			swaggerMux.ServeHTTP(w, r)
+			return
+		}
+		apiHandler.ServeHTTP(w, r)
+	})
 }
