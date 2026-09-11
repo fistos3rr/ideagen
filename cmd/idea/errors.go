@@ -18,7 +18,7 @@ func (app *application) errorResponse(
 	w http.ResponseWriter,
 	r *http.Request,
 	status int,
-	message any,
+	message string,
 ) {
 	resp := dto.ErrorResponse{
 		Error: message,
