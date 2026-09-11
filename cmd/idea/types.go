@@ -285,7 +285,7 @@ func (app *application) updateTypeHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	resp := TypeResponse{
+	resp := dto.TypeResponse{
 		Type: t,
 	}
 
