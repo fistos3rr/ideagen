@@ -98,7 +98,7 @@ type envelope map[string]any
 func (app *application) writeJSON(
 	w http.ResponseWriter,
 	status int,
-	data envelope,
+	data any,
 	headers http.Header,
 ) error {
 	js, err := json.Marshal(data)
