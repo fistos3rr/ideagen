@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/fistos3rr/ideagen/internal/data"
+	"github.com/fistos3rr/ideagen/internal/api/dto"
 	"github.com/fistos3rr/ideagen/internal/validator"
 )
 
