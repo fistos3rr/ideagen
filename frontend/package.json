@@ -3,12 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "api:convert": "swagger2openapi ../docs/swagger.json -o ./lib/api/openapi.json",
+    "api:types": "openapi-typescript ./lib/api/openapi.json -o ./lib/api/schema.d.ts",
+    "api:gen": "npm run api:convert && npm run api:types",
     "dev": "next dev",
-    "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "build": "next build",
+    "lint": "next lint"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "jose": "^6.2.12",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -24,10 +29,5 @@
     "swagger2openapi": "^7.0.8",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "scripts": {
-    "api:convert": "swagger2openapi ../docs/swagger.json -o ./lib/api/openapi.json",
-    "api:types": "openapi-typescript ./lib/api/openapi.json -o ./lib/api/schema.d.ts",
-    "api:gen": "npm run api:convert && npm run api:types"
   }
 }

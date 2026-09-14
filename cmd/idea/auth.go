@@ -81,7 +81,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 // @Produce json
 // @Param request body dto.LoginRequest true "User login data"
 // @Success 200 {object} dto.LoginResponse "Successful authentication"
-// @Header 200 {string} Set-Cookie "refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Path=/"
+// @Header 200 {string} Set-Cookie "refresh_token=<jwt>; HttpOnly; Secure; SameSite=Lax; Path=/"
 // @Failure 400 {object} dto.ErrorResponse "Bad request"
 // @Failure 401 {object} dto.ErrorResponse "Invalid credentials"
 // @Failure 422 {object} dto.ValidationErrorResponse "Validation error"
@@ -142,7 +142,7 @@ func (app *application) loginUserHandler(w http.ResponseWriter, r *http.Request)
 		Value:    refreshToken,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 		Expires:  refreshRecord.ExpiresAt,
 	})
@@ -225,7 +225,7 @@ func (app *application) refreshHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    newRefresh,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 		Expires:  newRecord.ExpiresAt,
 	})
@@ -262,7 +262,7 @@ func (app *application) logoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 		Expires:  time.Now().Add(-1 * time.Hour),
 	})

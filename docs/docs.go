@@ -111,7 +111,7 @@ const docTemplate = `{
                         "headers": {
                             "Set-Cookie": {
                                 "type": "string",
-                                "description": "refresh_token=\u003cjwt\u003e; HttpOnly; Secure; SameSite=Strict; Path=/"
+                                "description": "refresh_token=\u003cjwt\u003e; HttpOnly; Secure; SameSite=Lax; Path=/"
                             }
                         }
                     },
