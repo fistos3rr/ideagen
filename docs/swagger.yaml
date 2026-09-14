@@ -1,0 +1,1190 @@
+basePath: /v1
+definitions:
+  data.BufferIdea:
+    properties:
+      created:
+        type: string
+      id:
+        type: string
+      idea:
+        $ref: '#/definitions/data.Idea'
+    type: object
+  data.Idea:
+    properties:
+      id:
+        type: integer
+      text:
+        type: string
+      type:
+        $ref: '#/definitions/data.Type'
+    type: object
+  data.Metadata:
+    properties:
+      current_page:
+        type: integer
+      first_page:
+        type: integer
+      last_page:
+        type: integer
+      page_size:
+        type: integer
+      total_records:
+        type: integer
+    type: object
+  data.Type:
+    properties:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  dto.AskRequest:
+    properties:
+      message:
+        example: What year now?
+        type: string
+    type: object
+  dto.AskResponse:
+    properties:
+      answer:
+        example: "2026"
+        type: string
+    type: object
+  dto.BufferIdeaListResponse:
+    properties:
+      buffer_ideas:
+        items:
+          $ref: '#/definitions/data.BufferIdea'
+        type: array
+    type: object
+  dto.BufferIdeaRequest:
+    properties:
+      buffer_idea_id:
+        type: string
+    type: object
+  dto.BufferIdeaResponse:
+    properties:
+      buffer_idea:
+        $ref: '#/definitions/data.BufferIdea'
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        example: something went wrong
+        type: string
+    type: object
+  dto.HealthResponse:
+    properties:
+      environment:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.IdeaListResponse:
+    properties:
+      ideas:
+        items:
+          $ref: '#/definitions/data.Idea'
+        type: array
+      metadata:
+        $ref: '#/definitions/data.Metadata'
+    type: object
+  dto.IdeaRequest:
+    properties:
+      text:
+        type: string
+      type_id:
+        type: integer
+    type: object
+  dto.IdeaResponse:
+    properties:
+      idea:
+        $ref: '#/definitions/data.Idea'
+    type: object
+  dto.IdeaUpdateRequest:
+    properties:
+      name:
+        type: string
+      type_id:
+        type: integer
+    type: object
+  dto.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: secret
+        type: string
+    type: object
+  dto.LoginResponse:
+    properties:
+      access_token:
+        example: eyJ...
+        type: string
+    type: object
+  dto.MessageResponse:
+    properties:
+      message:
+        example: string
+        type: string
+    type: object
+  dto.TypeListResponse:
+    properties:
+      metadata:
+        $ref: '#/definitions/data.Metadata'
+      types:
+        items:
+          $ref: '#/definitions/data.Type'
+        type: array
+    type: object
+  dto.TypeRequest:
+    properties:
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  dto.TypeResponse:
+    properties:
+      type:
+        $ref: '#/definitions/data.Type'
+    type: object
+  dto.TypeUpdateRequest:
+    properties:
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  dto.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      role:
+        type: string
+    type: object
+  dto.UserCredentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.UserIdeaRequest:
+    properties:
+      idea_id:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  dto.UserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/dto.User'
+    type: object
+  dto.ValidationErrorResponse:
+    properties:
+      error:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+info:
+  contact: {}
+  description: API for work with ideas
+  title: Idea API
+  version: "1.0"
+paths:
+  /ask:
+    post:
+      consumes:
+      - application/json
+      description: Ask AI using AI provider
+      parameters:
+      - description: Message to AI
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success answer
+          schema:
+            $ref: '#/definitions/dto.AskResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilegies
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Ask AI
+      tags:
+      - ai
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: User authentication using email and password, and returns JWT-token.
+      parameters:
+      - description: User login data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful authentication
+          headers:
+            Set-Cookie:
+              description: refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict;
+                Path=/
+              type: string
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation error
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Login user
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      description: |
+        Trade refresh-token from HttpOnly-cookie on new access token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New access-token
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "401":
+          description: Invalid token
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserCredentials'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Register user
+      tags:
+      - auth
+  /health:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Check health
+      tags:
+      - metrics
+  /ideas:
+    get:
+      description: Get all ideas pages with filters
+      parameters:
+      - description: Idea text
+        in: query
+        name: text
+        type: string
+      - description: Type ID
+        in: query
+        name: type_id
+        type: integer
+      - description: Active only
+        in: query
+        name: active_only
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort by
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdeaListResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Idea list
+      tags:
+      - ideas
+    post:
+      consumes:
+      - application/json
+      description: Create Idea manually (no random)
+      parameters:
+      - description: Idea data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.IdeaRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Idea created
+          headers:
+            Location:
+              description: 'URL of created resource, for example: /v1/ideas/42'
+              type: string
+          schema:
+            $ref: '#/definitions/dto.IdeaResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Idea
+      tags:
+      - ideas
+  /ideas/{id}:
+    delete:
+      description: Delete idea by ID
+      parameters:
+      - description: Idea ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Idea deleted successfully
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete idea
+      tags:
+      - ideas
+    get:
+      parameters:
+      - description: Idea ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdeaResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Idea by id
+      tags:
+      - ideas
+    patch:
+      consumes:
+      - application/json
+      description: Patch idea's fields
+      parameters:
+      - description: Idea ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Idea update data
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/dto.IdeaUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Idea updated
+          schema:
+            $ref: '#/definitions/dto.IdeaResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update idea
+      tags:
+      - ideas
+  /service/idea/buffer:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BufferIdeaListResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get my generated ideas from buffer
+      tags:
+      - service
+    post:
+      consumes:
+      - application/json
+      description: Choose idea from buffer by UUID, pushes that idea into database,
+        clears buffer
+      parameters:
+      - description: Buffer Idea UUID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BufferIdeaRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Idea created
+          headers:
+            Location:
+              description: 'URL of created resource, for example: /service/ideas/{id}'
+              type: string
+          schema:
+            $ref: '#/definitions/dto.IdeaResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Choose buffer idea by UUID
+      tags:
+      - service
+  /service/idea/buffer/{id}:
+    get:
+      parameters:
+      - description: Buffer Idea UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.BufferIdeaResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Idea from buffer by UUID
+      tags:
+      - service
+  /service/idea/generate:
+    post:
+      description: Generates random ideas and push them into buffer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Idea generated in buffer
+          schema:
+            $ref: '#/definitions/dto.BufferIdeaResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Generate random idea
+      tags:
+      - service
+  /service/ideas:
+    get:
+      description: Get all ideas pages with filters
+      parameters:
+      - description: Idea status (0 - all, 1 - active, 2 - completed, 3 - archived)
+        in: query
+        name: status
+        type: integer
+      - description: Idea text
+        in: query
+        name: text
+        type: string
+      - description: Type ID
+        in: query
+        name: type_id
+        type: integer
+      - description: Active only
+        in: query
+        name: active_only
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort by
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdeaListResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Idea list
+      tags:
+      - service
+  /service/ideas/{id}:
+    delete:
+      description: Delete my idea by ID
+      parameters:
+      - description: Idea ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Idea deleted successfully
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete my idea
+      tags:
+      - service
+    get:
+      parameters:
+      - description: Idea ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdeaResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get My Idea by id
+      tags:
+      - service
+  /service/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get me
+      tags:
+      - service
+  /service/useridea:
+    post:
+      consumes:
+      - application/json
+      description: Create bound between user and idea, so idea became user's
+      parameters:
+      - description: User and idea ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UserIdeaRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create user-idea bound
+      tags:
+      - service
+  /types:
+    get:
+      description: Get all types pages with filters
+      parameters:
+      - description: Type name
+        in: query
+        name: name
+        type: string
+      - description: Active only
+        in: query
+        name: active_only
+        type: boolean
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort by
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TypeListResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Type list
+      tags:
+      - types
+    post:
+      consumes:
+      - application/json
+      description: Create Type for Ideas
+      parameters:
+      - description: Type data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TypeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Type created
+          headers:
+            Location:
+              description: 'URL of created resource, for example: /v1/types/42'
+              type: string
+          schema:
+            $ref: '#/definitions/dto.TypeResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create Type
+      tags:
+      - types
+  /types/{id}:
+    delete:
+      description: Delete type by ID
+      parameters:
+      - description: Type ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Type deleted successfully
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete type
+      tags:
+      - types
+    get:
+      parameters:
+      - description: Type ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TypeResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Type by id
+      tags:
+      - types
+    patch:
+      consumes:
+      - application/json
+      description: Update type fields, for example change IsActive status
+      parameters:
+      - description: Type ID
+        example: 42
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Type update data
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/dto.TypeUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Type updated
+          schema:
+            $ref: '#/definitions/dto.TypeResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Not enough privilleges
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "422":
+          description: Validation failed
+          schema:
+            $ref: '#/definitions/dto.ValidationErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update type
+      tags:
+      - types
+securityDefinitions:
+  BearerAuth:
+    description: 'JWT access token. Example: "Bearer eyJhbGci0i..."'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
