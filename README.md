@@ -22,3 +22,6 @@ Microservices app written on golang. Generating ideas for self-education.
     - JWT_SECRET_KEY - jwt secret
     - ACCESS_TOKEN_TTL_MINUTES
     - REFRESH_TOKEN_TTL_DAYS
+
+- ./frontend/.env.local - file with frontend env vars
+    - NEXT_PUBLIC_API_URL=/v1
