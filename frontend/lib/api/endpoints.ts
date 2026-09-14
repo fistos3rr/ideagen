@@ -13,15 +13,40 @@ type MessageResponse = components['schemas']['dto.MessageResponse'];
 type IdeasQuery = paths['/ideas']['get']['parameters']['query'];
 
 export const authApi = {
-  login: (body: { email:string; password: string }) =>
-    apiRequest<LoginResponse>('/auth/login', { method: 'POST', body }),
+  login: async (body: { email: string; password: string }) => {
+    const res = await apiRequest<LoginResponse>('/auth/login', {
+      method: 'POST',
+      body,
+      skipRefresh: true,
+    });
+    setAccessToken(res.accessToken);
+    return res;
+  },
 
-  logout: (token: string) =>
-    apiRequest<MessageResponse>('/auth/logout', { method: 'POST', token }),
-
-  refresh: () =>
-    apiRequest<LoginResponse>('/auth/refresh', { method: 'POST' }),
+  refresh: async () => {
+    const res = await apiRequest<LoginResponse>('/auth/refresh', {
+      method: 'POST',
+      skipRefresh: true,
+    });
+    setAccessToken(res.accessToken);
+    return res;
+  },
 
   register: (body: { email: string; password: string }) =>
-    apiRequest<MessageResponse>('/auth/register', { method: 'POST', body }),
+    apiRequest<MessageResponse>('/auth/register', {
+      method: 'POST',
+      body,
+      skipRefresh: true,
+    }),
+
+  logout: async () => {
+    try {
+      await apiRequest<MessageResponse>('/auth/logout', {
+        method: 'POST',
+        skipRefresh: true,
+      });
+    } finally {
+      setAccessToken(null);
+    }
+  },
 };
