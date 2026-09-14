@@ -31,6 +31,7 @@
     "api:gen": "npm run api:convert && npm run api:types",
     "dev": "next dev",
     "start": "next start",
+    "build": "next build",
     "lint": "next lint"
   }
 }
