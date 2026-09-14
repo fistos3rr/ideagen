@@ -1,56 +1,97 @@
 import { apiRequest } from './client';
 import type { components, paths } from './schema';
 
-type Idea = components['schemas']['data.Idea'];
-type IdeaListResponse = components['schemas']['dto.IdeaListResponse'];
-type IdeaResponse = components['schemas']['dto.IdeaResponse'];
-type Type = components['schemas']['data.Type'];
-type TypeListResponse = components['schemas']['dto.TypeListResponse'];
-type LoginResponse = components['schemas']['dto.LoginResponse'];
-type UserResponse = components['schemas']['dto.UserResponse'];
-type MessageResponse = components['schemas']['dto.MessageResponse'];
-
-type IdeasQuery = paths['/ideas']['get']['parameters']['query'];
+type S = components['schemas'];
 
 export const authApi = {
-  login: (body: { email: string; password: string }) =>
-    apiRequest<LoginResponse>('/auth/login', { method: 'POST', body }),
+  login: (body: S['dto.LoginRequest']) =>
+    apiRequest<S['dto.LoginResponse']>('/auth/login', { method: 'POST', body }),
 
-  logout: (token: string) => 
-    apiRequest<MessageResponse>('/auth/logout', { method: 'POST', token }),
+  register: (body: S['dto.UserCredentials']) =>
+    apiRequest<S['dto.MessageResponse']>('/auth/register', { method: 'POST', body }),
+
+  logout: () =>
+    apiRequest<S['dto.MessageResponse']>('/auth/logout', { method: 'POST' }),
 
   refresh: () =>
-    apiRequest<LoginResponse>('/auth/refresh', { method: 'POST' }),
+    apiRequest<S['dto.LoginResponse']>('/auth/refresh', { method: 'POST' }),
+};
 
-  register: (body: { email: string; password: string }) =>
-    apiRequest<MessageResponse>('/auth/register', { method: 'POST', body }),
+export const meApi = {
+  get: () => apiRequest<S['dto.UserResponse']>('/service/me'),
+};
+
+// Query-типы достаём прямо из paths — они уже описаны в схеме
+type IdeasQuery = paths['/ideas']['get']['parameters']['query'];
+
+export const ideasApi = {
+  list: (query?: IdeasQuery) =>
+    apiRequest<S['dto.IdeaListResponse']>('/ideas', { query }),
+
+  get: (id: number) =>
+    apiRequest<S['dto.IdeaResponse']>(`/ideas/${id}`),
+
+  create: (body: S['dto.IdeaRequest']) =>
+    apiRequest<S['dto.IdeaResponse']>('/ideas', { method: 'POST', body }),
+
+  update: (id: number, body: S['dto.IdeaUpdateRequest']) =>
+    apiRequest<S['dto.IdeaResponse']>(`/ideas/${id}`, { method: 'PATCH', body }),
+
+  remove: (id: number) =>
+    apiRequest<S['dto.MessageResponse']>(`/ideas/${id}`, { method: 'DELETE' }),
+};
+
+export const typesApi = {
+  list: (query?: paths['/types']['get']['parameters']['query']) =>
+    apiRequest<S['dto.TypeListResponse']>('/types', { query }),
+
+  get: (id: number) =>
+    apiRequest<S['dto.TypeResponse']>(`/types/${id}`),
+
+  create: (body: S['dto.TypeRequest']) =>
+    apiRequest<S['dto.TypeResponse']>('/types', { method: 'POST', body }),
+
+  update: (id: number, body: S['dto.TypeUpdateRequest']) =>
+    apiRequest<S['dto.TypeResponse']>(`/types/${id}`, { method: 'PATCH', body }),
+
+  remove: (id: number) =>
+    apiRequest<S['dto.MessageResponse']>(`/types/${id}`, { method: 'DELETE' }),
+};
+
+export const bufferApi = {
+  list: () => apiRequest<S['dto.BufferIdeaListResponse']>('/service/idea/buffer'),
+
+  get: (uuid: string) =>
+    apiRequest<S['dto.BufferIdeaResponse']>(`/service/idea/buffer/${uuid}`),
+
+  generate: () =>
+    apiRequest<S['dto.BufferIdeaResponse']>('/service/idea/generate', { method: 'POST' }),
+
+  choose: (buffer_idea_id: string) =>
+    apiRequest<S['dto.IdeaResponse']>('/service/idea/buffer', {
+      method: 'POST',
+      body: { buffer_idea_id } satisfies S['dto.BufferIdeaRequest'],
+    }),
 };
 
 export const serviceApi = {
-  me: (token: string) => apiRequest<UserResponse>('/service/me', { token }),
-    
-  myIdeas: (query?: IdeasQuery, token?: string) =>
-    apiRequest<IdeaListResponse>('/service/ideas', { query, token }),
+  listIdeas: (query?: paths['/service/ideas']['get']['parameters']['query']) =>
+    apiRequest<S['dto.IdeaListResponse']>('/service/ideas', { query }),
 
-  myIdea: (id: number, token: string) =>
-    apiRequest<IdeaResponse>(`/service/ideas/${id}`, { token }),
+  getIdea: (id: number) =>
+    apiRequest<S['dto.IdeaResponse']>(`/service/ideas/${id}`),
 
-  generateIdea: (token: string) =>
-  apiRequest<components['schemas']['dto.BufferIdeaResponse']>(
-    '/service/idea/generate',
-    { method: 'POST', token },
-  ),
+  removeIdea: (id: number) =>
+    apiRequest<S['dto.MessageResponse']>(`/service/ideas/${id}`, { method: 'DELETE' }),
 
-  bufferIdeas: (token: string) =>
-  apiRequest<components['schemas']['dto.BufferIdeaListResponse']>(
-    '/service/idea/buffer',
-    { token },
-  ),
+  bindUserIdea: (body: S['dto.UserIdeaRequest']) =>
+    apiRequest<S['dto.MessageResponse']>('/service/useridea', { method: 'POST', body }),
+};
 
-  chooseBufferIdea: (buffer_idea_id: string, token: string) =>
-  apiRequest<IdeaResponse>('/service/idea/buffer', {
-    method: 'POST',
-    body: { buffer_idea_id },
-    token,
-  }),
+export const aiApi = {
+  ask: (message: string) =>
+    apiRequest<S['dto.AskResponse']>('/ask', {
+      method: 'POST',
+      body: { message } satisfies S['dto.AskRequest'],
+    }),
 };
