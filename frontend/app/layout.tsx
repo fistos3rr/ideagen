@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,43 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <header className="border-b">
-          <nav className="max-w-4xl mx-auto flex items-center gap-6 px-4 py-3">
-            <Link href="/" className="font-bold">
-              IdeaGen
-            </Link>
-            <Link href="/ideas" className="hover:underline">
-              Идеи
-            </Link>
-            <Link href="/types" className="hover:underline">
-              Типы
-            </Link>
-            <Link href="/my-ideas" className="hover:underline">
-              Мои идеи
-            </Link>
-
-            <div className="ml-auto flex items-center gap-4">
-              <Link href="/login" className="hover:underline">
-                Войти
-              </Link>
-              <Link href="/register" className="hover:underline">
-                Регистрация
-              </Link>
-            </div>
-          </nav>
-        </header>
-
-        <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8">
-          {children}
-        </main>
-
-        <footer className="border-t text-sm text-gray-500">
-          <div className="max-w-4xl mx-auto px-4 py-3">
-            © {new Date().getFullYear()} IdeaGen
-          </div>
-        </footer>
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }
