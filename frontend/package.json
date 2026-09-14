@@ -29,6 +29,8 @@
     "api:convert": "swagger2openapi ../docs/swagger.json -o ./lib/api/openapi.json",
     "api:types": "openapi-typescript ./lib/api/openapi.json -o ./lib/api/schema.d.ts",
     "api:gen": "npm run api:convert && npm run api:types",
-    "dev": "next dev"
+    "dev": "next dev",
+    "start": "next start",
+    "lint": "next lint"
   }
 }
