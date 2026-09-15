@@ -114,7 +114,7 @@ export interface paths {
                 /** @description Successful authentication */
                 200: {
                     headers: {
-                        /** @description refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict; Path=/ */
+                        /** @description refresh_token=<jwt>; HttpOnly; Secure; SameSite=Lax; Path=/ */
                         "Set-Cookie"?: string;
                         [name: string]: unknown;
                     };

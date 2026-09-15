@@ -261,8 +261,7 @@ paths:
           description: Successful authentication
           headers:
             Set-Cookie:
-              description: refresh_token=<jwt>; HttpOnly; Secure; SameSite=Strict;
-                Path=/
+              description: refresh_token=<jwt>; HttpOnly; Secure; SameSite=Lax; Path=/
               type: string
           schema:
             $ref: '#/definitions/dto.LoginResponse'
