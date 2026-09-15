@@ -1,8 +1,8 @@
-export type FieldErorrs = Record<string, string>;
+export type FieldErrors = Record<string, string>;
 
 export class ApiError extends Error {
   status: number;
-  fields?: FieldErorrs;
+  fields?: FieldErrors;
   raw?: unknown;
   
   constructor(opts: {
