@@ -1,17 +1,10 @@
-import type { Metadata } from "next";
-import { AuthProvider } from '@/lib/auth/AuthProvider';
-import "./globals.css";
-
-export const metadata: Metadata = {
-  title: "IdeaGen App",
-};
+import '@/app/ui/global.css';
+import { inter } from '@/app/ui/fonts';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru">
-      <body>
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+    <html lang="en">
+      <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
   );
 }

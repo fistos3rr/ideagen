@@ -1,6 +1,6 @@
 import type { paths, components } from './schema';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '/v1';
+const BACKEND_API_URL = process.env.BACKEND_API_URL ?? 'http://localhost:4000/v1';
 
 type ApiErrorPayload =
   | components['schemas']['dto.ErrorResponse']
@@ -26,7 +26,7 @@ function refreshAccessToken(): Promise<string | null> {
 
   refreshPromise = (async () => {
     try {
-      const res = await fetch(joinUrl(BASE_URL, '/auth/refresh'), {
+      const res = await fetch(joinUrl(BACKEND_API_URL, '/auth/refresh'), {
         method: 'POST',
         credentials: 'include',
       });
@@ -49,12 +49,11 @@ function refreshAccessToken(): Promise<string | null> {
 }
 
 function joinUrl(base: string, path: string) {
-  const b = base.startsWith('http') ? base : window.location.origin + base;
-  return new URL(path.replace(/^\//, ''), b.endsWith('/') ? b : b + '/').toString();
+  return new URL(base + path).toString();
 }
 
 function buildUrl(path: string, query?: RequestOptions['query']) {
-  const url = new URL(joinUrl(BASE_URL, path));
+  const url = new URL(joinUrl(BACKEND_API_URL, path));
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined) url.searchParams.set(k, String(v));
@@ -73,10 +72,6 @@ type RequestOptions = {
   query?: Record<string, string | number | boolean | undefined>;
   skipRefresh?: boolean;
 };
-
-// callback на "сессия кончилась" — навешиваешь в AuthProvider
-let onUnauthorized: (() => void) | null = null;
-export const setOnUnauthorized = (fn: (() => void) | null) => { onUnauthorized = fn; };
 
 export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const doFetch = (token: string | null) => {
@@ -97,13 +92,11 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   if (res.status === 401 && !opts.skipRefresh) {
     const newToken = await refreshAccessToken();
     if (!newToken) {
-      onUnauthorized?.();
       throw new ApiError(401, await safeJson(res));
     }
     res = await doFetch(newToken);
 
     if (res.status === 401) {
-      onUnauthorized?.();
       throw new ApiError(401, await safeJson(res));
     }
   }

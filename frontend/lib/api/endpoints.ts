@@ -9,8 +9,18 @@ type TypeListResponse = components['schemas']['dto.TypeListResponse'];
 type LoginResponse = components['schemas']['dto.LoginResponse'];
 type UserResponse = components['schemas']['dto.UserResponse'];
 type MessageResponse = components['schemas']['dto.MessageResponse'];
+type HealthResponse = components['schemas']['dto.HealthResponse'];
 
 type IdeasQuery = paths['/ideas']['get']['parameters']['query'];
+
+export const healthApi = {
+  health: async () => {
+    const res = await apiRequest<HealthResponse>('/health', {
+      method: 'GET',
+    })
+    return res;
+  }
+}
 
 export const authApi = {
   login: async (body: { email: string; password: string }) => {

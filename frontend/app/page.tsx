@@ -1,5 +1,13 @@
-import { redirect } from 'next/navigation';
+import { healthApi } from '@/lib/api/endpoints'
 
-export default function Home() {
-    redirect('/me');
+export default function Page() {
+  const data = await healthApi.health()
+
+  return (
+    <div>
+      <h1>Ideagen</h1>
+      <p>Environment: {data.environment}</p>
+      <p>Status: {data.status}</p>
+    </div>
+  )
 }
