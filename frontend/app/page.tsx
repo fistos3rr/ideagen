@@ -1,6 +1,6 @@
 import { healthApi } from '@/lib/api/endpoints'
 
-export default function Page() {
+export default async function Page() {
   const data = await healthApi.health()
 
   return (
