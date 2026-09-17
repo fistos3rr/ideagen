@@ -15,14 +15,18 @@ export function LoginForm() {
   const router = useRouter()
 
   useEffect(() => {
-    try {
-      setPending(true);
-      if (await isAuthorized()) {
-        router.push('/');
-        router.refresh();
-      }
-    } catch {}
-  });
+    async function load() {
+      try {
+        setPending(true);
+        if (await isAuthorized()) {
+          router.push('/');
+          router.refresh();
+        }
+      } catch {}
+    }
+
+    load();
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
