@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import LogoutButton from '@/app/components/LogoutButton'
 
-export default async function Header({ authorized }: { authorized: boolean }) {
+export default function Header({ authorized }: { authorized: boolean }) {
   return (
     <header className="header">
       <nav>
