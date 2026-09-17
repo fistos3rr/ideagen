@@ -1,6 +1,8 @@
 import type { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { decodeJwt } from 'jose';
+import { cache } from 'react';
+import { serviceApi } from 'endpoints';
 
 export const BACKEND = process.env.BACKEND_API_URL!;
 export const IS_PROD = process.env.NODE_ENV === 'production';
@@ -60,14 +62,3 @@ export function isTokenExpired(token: string): boolean {
   }
 }
 
-export async function isAuthorized(): Promise<boolean> {
-  const store = await cookies();
-  const refreshToken = store.get(REFRESH_COOKIE)?.value;
-  const accessToken = store.get(ACCESS_COOKIE)?.value; 
-
-  if (isTokenExpired(accessToken) && isTokenExpired(refreshToken)) {
-    return false;
-  }
-
-  return true;
-}
