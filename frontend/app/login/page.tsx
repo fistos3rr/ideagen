@@ -3,7 +3,7 @@ import { LoginForm } from "@/app/login/login-form";
 import { isAuthorized } from "@/lib/api/auth";
 import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+export default async function LoginPage() {
   const authorized = await isAuthorized();
 
   if (isAuthorized) {
