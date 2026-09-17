@@ -33,12 +33,16 @@ export function setRefreshCookie(res: NextResponse, token: string) {
 }
 
 export function clearAuthCookies(res: NextResponse) {
-  res.cookies.delete(ACCESS_COOKIE);
+  res.cookies.set(ACCESS_COOKIE, '', {
+    ...baseCookieOpts,
+    path: '/',
+    maxAge: 0
+  });
   res.cookies.set(REFRESH_COOKIE, '', {
     ...baseCookieOpts,
     path: '/',
     maxAge: 0
-  })
+  });
 }
 
 export function extractCookie(res: Response, name: string): string | null {
