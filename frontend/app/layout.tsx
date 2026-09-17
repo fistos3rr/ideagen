@@ -4,7 +4,7 @@ import Header from '@/app/ui/header';
 import { headers } from 'next/headers';
 
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const authorized = (await headers()).get('x-authorized') === 'true';
 
   return (
