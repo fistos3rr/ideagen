@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import type { LoginRequest } from '@/lib/api/types';
 import type { FieldErrors } from '@/lib/api/error';
-import { isAuthorized } from '@/lib/api/auth';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -13,20 +12,6 @@ export function LoginForm() {
   const [validationErrors, setValidationErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
   const router = useRouter()
-
-  useEffect(() => {
-    async function load() {
-      try {
-        setPending(true);
-        if (await isAuthorized()) {
-          router.push('/');
-          router.refresh();
-        }
-      } catch {}
-    }
-
-    load();
-  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
