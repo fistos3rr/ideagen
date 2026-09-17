@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { IsAuthorized } from '@/lib/api/client';
+import { isAuthorized } from '@/lib/api/client';
 
 export default async function Header() {
-  const authorized = await IsAuthorized();
+  const authorized = await isAuthorized();
 
   return (
     <header className="header">
