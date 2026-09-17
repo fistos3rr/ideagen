@@ -61,6 +61,13 @@ export function isTokenExpired(token: string): boolean {
 }
 
 export async function isAuthorized(): Promise<boolean> {
-  const token = (await cookies()).get(REFRESH_COOKIE)?.value;
-  return !isTokenExpired(token);
+  const store = await.cookies()
+  const refreshToken = store.get(REFRESH_COOKIE)?.value;
+  const accessToken = store.get(ACCESS_COOKIE)?.value; 
+
+  if (isTokenExpired(accessToken) && isTokenExpired(refreshToken)) {
+    return false;
+  }
+
+  return true;
 }

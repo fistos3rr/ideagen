@@ -1,7 +1,7 @@
 import 'server-only';
 import { cookies } from 'next/headers';
 import { parseApiError } from './error';
-import { BACKEND, REFRESH_COOKIE } from './auth';
+import { BACKEND } from './auth';
 import { decodeJwt } from 'jose';
 
 // const ACCESS_MAX_AGE = 60 * 15;

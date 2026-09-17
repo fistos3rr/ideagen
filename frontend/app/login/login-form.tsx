@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { LoginRequest } from '@/lib/api/types';
 import type { FieldErrors } from '@/lib/api/error';
+import { isAuthorized } from '@/lib/api/auth';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -12,6 +13,16 @@ export function LoginForm() {
   const [validationErrors, setValidationErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
   const router = useRouter()
+
+  useEffect(() => {
+    try {
+      setPending(true);
+      if (await isAuthorized()) {
+        router.push('/');
+        router.refresh();
+      }
+    } catch {}
+  });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +59,7 @@ export function LoginForm() {
         setError(message);
         return;
       } else {
-        router.push('/me');
+        router.push('/');
         router.refresh();
       } 
     } catch {
