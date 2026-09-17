@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { LoginResponse } from '@/lib/api/types';
-import { decodeJwt } from 'jose';
+import { isTokenExpired } from '@/lib/api/client';
 import { 
   BACKEND, setAccessCookie, 
   setRefreshCookie, extractCookie, clearAuthCookies,
@@ -10,18 +10,6 @@ import {
 export const config = {
   matcher: ['/me'],
 };
-
-function isTokenExpired(token: string): boolean {
-  try {
-    const payload = decodeJwt(token);
-    if (!payload.exp) return true;
-
-    const currentTime = Math.floor(Date.now() / 1000);
-    return payload.exp <= currentTime + 5;
-  } catch {
-    return true;
-  }
-}
 
 export async function proxy(req: NextRequest) {
   let accessToken = req.cookies.get(ACCESS_COOKIE)?.value;

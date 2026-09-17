@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { parseApiError } from './error';
 import { BACKEND } from './auth';
+import { decodeJwt } from 'jose';
 
 // const ACCESS_MAX_AGE = 60 * 15;
 // const REFRESH_MAX_AGE = 60 * 60 * 24;
@@ -10,6 +11,23 @@ type RequestOptions = {
   method?: 'POST' | 'GET' | 'PATCH' | 'DELETE';
   body?: unknown;
   query?: Record<string, string | number | boolean | undefined>;
+}
+
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = decodeJwt(token);
+    if (!payload.exp) return true;
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp <= currentTime + 5;
+  } catch {
+    return true;
+  }
+}
+
+export async function isAuthorized() boolean {
+  const token = (await cookies()).get(ACCESS_COOKIE)?.value;
+  return !isTokenExpired(token);
 }
 
 export async function apiRequest<T>(path: string, opts: RequestOptions = {}) {
