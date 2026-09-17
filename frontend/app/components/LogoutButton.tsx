@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from '@/app/ui/button';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
