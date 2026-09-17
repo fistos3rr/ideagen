@@ -6,23 +6,33 @@ import {
   REFRESH_COOKIE, ACCESS_COOKIE
 } from '@/lib/api/auth';
 
+const PROTECTED_PATHS = ['/me']
+
+function isProtected(pathname: string): boolean {
+  return PROTECTED_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + '/')
+  );
+}
+
 export const config = {
-  matcher: ['/me'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
 };
 
 export async function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl; 
+
   let accessToken = req.cookies.get(ACCESS_COOKIE)?.value;
   let refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
 
-  if (accessToken && isTokenExpired(accessToken)) {
-    accessToken = undefined;
-  }
+  const authorized =
+    Boolean(accessToken && !isTokenExpired(accessToken)) ||
+    Boolean(refreshToken && !isTokenExpired(refreshToken));
 
-  if (!accessToken && !refreshToken) {
+  if (!authorized && isProtected(pathname)) {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  if (!accessToken && refreshToken) {
+  if (!accessToken && refreshToken && isProtected(pathname)) {
     try {
       const backRes = await fetch(`${BACKEND}/auth/refresh`, {
         method: 'POST',
@@ -60,6 +70,8 @@ export async function proxy(req: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const result = NextResponse.next();
+  result.headers.set('x-authorized', String(authorized));
+  return result;
 }
 
