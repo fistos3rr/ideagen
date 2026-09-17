@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { LoginResponse } from '@/lib/api/types';
-import { isTokenExpired } from '@/lib/api/client';
 import { 
-  BACKEND, setAccessCookie, 
+  BACKEND, setAccessCookie, isTokenExpired 
   setRefreshCookie, extractCookie, clearAuthCookies,
   REFRESH_COOKIE, ACCESS_COOKIE
 } from '@/lib/api/auth';

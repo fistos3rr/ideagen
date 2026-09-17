@@ -1,4 +1,6 @@
 import type { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { decodeJwt } from 'jose';
 
 export const BACKEND = process.env.BACKEND_API_URL!;
 export const IS_PROD = process.env.NODE_ENV === 'production';
@@ -44,4 +46,21 @@ export function extractCookie(res: Response, name: string): string | null {
     if (m) return decodeURIComponent(m[1]);
   }
   return null;
+}
+
+export function isTokenExpired(token: string): boolean {
+  try {
+    const payload = decodeJwt(token);
+    if (!payload.exp) return true;
+
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp <= currentTime + 5;
+  } catch {
+    return true;
+  }
+}
+
+export async function isAuthorized(): Promise<boolean> {
+  const token = (await cookies()).get(REFRESH_COOKIE)?.value;
+  return !isTokenExpired(token);
 }
