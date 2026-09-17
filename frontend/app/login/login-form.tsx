@@ -1,5 +1,6 @@
 'use client';
 
+import { redirect } from 'next/navigation';
 import { useState } from 'react';
 import type { LoginRequest } from '@/lib/api/types';
 import type { FieldErrors } from '@/lib/api/error';
@@ -45,6 +46,8 @@ export function LoginForm() {
           ? data.error : `Error ${res.status}`;
         setError(message);
         return;
+      } else {
+        redirect('/me');
       }
     } catch {
       setError('Try again later.');
