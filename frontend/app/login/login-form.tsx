@@ -1,6 +1,6 @@
 'use client';
 
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { LoginRequest } from '@/lib/api/types';
 import type { FieldErrors } from '@/lib/api/error';
@@ -11,6 +11,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<FieldErrors>({});
   const [pending, setPending] = useState(false);
+  const router = useRouter()
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,8 +48,9 @@ export function LoginForm() {
         setError(message);
         return;
       } else {
-        redirect('/me');
-      }
+        router.push('/me');
+        router.refresh();
+      } 
     } catch {
       setError('Try again later.');
     } finally {
