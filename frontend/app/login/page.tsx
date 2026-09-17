@@ -1,12 +1,12 @@
 import { Suspense } from 'react';
 import { LoginForm } from "@/app/login/login-form";
-import { isAuthorized } from "@/lib/api/auth";
 import { redirect } from "next/navigation";
+import { headers } from 'next/headers';
 
 export default async function LoginPage() {
-  const authorized = await isAuthorized();
+  const authorized = (await headers()).get('x-authorized') === 'true';
 
-  if (isAuthorized) {
+  if (authorized) {
     redirect("/");
   }
 
