@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import LogoutButton from '@/app/components/LogoutButton'
+import { Button } from './button'
 
 export default function Header({ authorized }: { authorized: boolean }) {
   return (
@@ -8,11 +9,15 @@ export default function Header({ authorized }: { authorized: boolean }) {
         <Link href="/">Main</Link>
         {authorized ? (
           <>
-            <Link href="/me">My profile</Link>
+            <Link href="/me">
+              <Button>My profile</Button>
+            </Link>
             <LogoutButton/>
           </>
         ):(
-          <Link href="/login">Login</Link>
+          <Link href="/login">
+            <Button>Login</Button>
+          </Link>
         )}
       </nav>
     </header>
