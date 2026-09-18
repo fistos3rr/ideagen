@@ -14,7 +14,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Suspense fallback={<div>Loading...</div>}>
           <Header authorized={authorized} />      
           <main>{children}</main>
-        <Suspense />
+        </Suspense>
       </body>
     </html>
   );
