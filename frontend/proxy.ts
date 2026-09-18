@@ -21,8 +21,8 @@ export const config = {
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl; 
 
-  let accessToken = req.cookies.get(ACCESS_COOKIE)?.value;
-  let refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
+  const accessToken = req.cookies.get(ACCESS_COOKIE)?.value;
+  const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
 
   const authorized =
     Boolean(accessToken && !isTokenExpired(accessToken)) ||
@@ -63,6 +63,8 @@ export async function proxy(req: NextRequest) {
       const res = NextResponse.next();
       setAccessCookie(res, data.access_token);
       setRefreshCookie(res, refresh);
+
+      res.headers.set('x-authorized', String(authorized))
 
       return res;
     } catch {

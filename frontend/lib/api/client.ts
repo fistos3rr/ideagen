@@ -2,7 +2,6 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { parseApiError } from './error';
 import { BACKEND } from './auth';
-import { decodeJwt } from 'jose';
 
 // const ACCESS_MAX_AGE = 60 * 15;
 // const REFRESH_MAX_AGE = 60 * 60 * 24;
@@ -16,7 +15,7 @@ type RequestOptions = {
 
 export async function apiRequest<T>(path: string, opts: RequestOptions = {}) {
   const store = await cookies();
-  let accessToken = store.get('access_token')?.value;
+  const accessToken = store.get('access_token')?.value;
   //const refreshToken = store.get('refresh_token')?.value;
 
   const url = new URL(`${BACKEND}${path}`);
@@ -40,7 +39,7 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}) {
     });
   };
 
-  let res = await doFetch(accessToken);
+  const res = await doFetch(accessToken);
 
   // if (res.status === 401 && refreshToken) {
   //   const refreshRes = await fetch(`${BACKEND}/auth/refresh`, {

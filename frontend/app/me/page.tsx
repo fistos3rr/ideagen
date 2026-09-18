@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { UserResponse, User } from '@/lib/api/types';
+import type { UserResponse, User } from '@/lib/api/types';
 import { serviceApi } from '@/lib/api/endpoints';
 
 export default async function MePage() {

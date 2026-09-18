@@ -1,8 +1,5 @@
 import type { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { decodeJwt } from 'jose';
-import { cache } from 'react';
-import { serviceApi } from 'endpoints';
 
 export const BACKEND = process.env.BACKEND_API_URL!;
 export const IS_PROD = process.env.NODE_ENV === 'production';

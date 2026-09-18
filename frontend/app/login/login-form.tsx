@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { LoginRequest } from '@/lib/api/types';
 import type { FieldErrors } from '@/lib/api/error';
 

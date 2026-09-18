@@ -13,7 +13,7 @@ export class ApiError extends Error {
     message?: string;
   }) {
     const { status, payload, message } = opts;
-    let msg = message ?? defaultMessage(status);
+    const msg = message ?? defaultMessage(status);
     super(msg);
     this.name = 'ApiError';
     this.status = status;
