@@ -12,3 +12,4 @@ export type ValidationErrorResponse = S['dto.ValidationErrorResponse'];
 export type MessageResponse = S['dto.MessageResponse'];
 export type User = S['dto.User'];
 export type UserResponse = S['dto.UserResponse'];
+export type UserCredentials = S['dto.UserCredentials']
