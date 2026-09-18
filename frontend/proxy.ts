@@ -6,7 +6,7 @@ import {
   REFRESH_COOKIE, ACCESS_COOKIE
 } from '@/lib/api/auth';
 
-const PROTECTED_PATHS = ['/me']
+const PROTECTED_PATHS = ['/me', '/generate']
 
 function isProtected(pathname: string): boolean {
   return PROTECTED_PATHS.some(
