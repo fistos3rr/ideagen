@@ -49,8 +49,19 @@ export function RegisterForm() {
         setError(message);
         return;
       } else {
-        router.push('/login');
-        router.refresh();
+        const loginReq: LoginRequest = { email, password };
+        const loginRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loginReq),
+        }).catch(() => null);
+        if (!res.ok) {
+          router.push('/login');
+          router.refresh();
+        } else {
+          router.push('/');
+          router.refresh();
+        } 
       } 
     } catch {
       setError('Try again later.');
