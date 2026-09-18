@@ -12,9 +12,9 @@ export default async function MePage() {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <>
       <p>Email: {user.email}</p>
       <p>Role: {user.role}</p>
-    </Suspense>
+    </>
   );
 }

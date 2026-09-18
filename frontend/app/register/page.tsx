@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { RegisterForm } from "@/app/register/register-form";
 import { redirect } from "next/navigation";
 import { headers } from 'next/headers';
@@ -11,8 +10,8 @@ export default async function RegisterPage() {
   }
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <>
       <RegisterForm />
-    </Suspense>
+    </>
   );
 }

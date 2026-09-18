@@ -2,6 +2,7 @@ import '@/app/ui/global.css';
 import { inter } from '@/app/ui/fonts';
 import Header from '@/app/ui/header';
 import { headers } from 'next/headers';
+import { Suspense } from 'react';
 
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -10,8 +11,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <Header authorized={authorized} />      
-        <main>{children}</main>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Header authorized={authorized} />      
+          <main>{children}</main>
+        <Suspense />
       </body>
     </html>
   );
