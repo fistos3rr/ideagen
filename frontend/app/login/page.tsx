@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { LoginForm } from "@/app/login/login-form";
 import { redirect } from "next/navigation";
 import { headers } from 'next/headers';

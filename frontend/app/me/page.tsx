@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import type { UserResponse, User } from '@/lib/api/types';
 import { serviceApi } from '@/lib/api/endpoints';
 
