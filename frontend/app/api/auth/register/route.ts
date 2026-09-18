@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { UserCredentials, MessageResponse } from '@/lib/api/types';
 import { parseApiError, FieldErrors } from '@/lib/api/error';
+import { BACKEND } from '@/lib/api/auth';
 
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as UserCredentials | null;
