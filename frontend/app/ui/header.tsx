@@ -6,7 +6,9 @@ export default function Header({ authorized }: { authorized: boolean }) {
   return (
     <header className="header">
       <nav>
-        <Link href="/">Main</Link>
+        <Link href="/">
+          <Button>Main</Button>
+        </Link>
         {authorized ? (
           <>
             <Link href="/me">
