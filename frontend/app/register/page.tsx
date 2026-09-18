@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
-import { LoginForm } from "@/app/login/login-form";
+import { RegisterForm } from "@/app/register/register-form";
 import { redirect } from "next/navigation";
 import { headers } from 'next/headers';
 
-export default async function LoginPage() {
+export default async function RegisterPage() {
   const authorized = (await headers()).get('x-authorized') === 'true';
 
   if (authorized) {
@@ -12,7 +12,7 @@ export default async function LoginPage() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <LoginForm />
+      <RegisterForm />
     </Suspense>
   );
 }

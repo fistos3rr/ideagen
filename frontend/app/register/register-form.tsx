@@ -5,7 +5,7 @@ import { useState } from 'react';
 import type { LoginRequest, UserCredentials } from '@/lib/api/types';
 import type { FieldErrors } from '@/lib/api/error';
 
-export function LoginForm() {
+export function RegisterForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repPassword, setRepPassword] = useState('');
