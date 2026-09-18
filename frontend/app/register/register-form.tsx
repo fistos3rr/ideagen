@@ -61,7 +61,7 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate>
-      <h1>Login</h1>
+      <h1>Register</h1>
       <label>
         Email
         <input
