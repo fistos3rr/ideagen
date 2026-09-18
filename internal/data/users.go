@@ -8,6 +8,7 @@ import (
 
 	"github.com/fistos3rr/ideagen/internal/validator"
 	"golang.org/x/crypto/bcrypt"
+	"github.com/lib/pq"
 )
 
 var ErrDuplicateEmail = errors.New("duplicate email")
@@ -135,8 +136,9 @@ func (m UserModel) Insert(user *User) error {
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt)
 	if err != nil {
+		var pqErr *pq.Error;
 		switch {
-		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
+		case (errors.As(err, &pqErr) && pqErr.Code == "23505" && pqErr.Constraint == "users_email_key"):
 			return ErrDuplicateEmail
 		default:
 			return err
