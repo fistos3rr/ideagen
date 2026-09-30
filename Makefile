@@ -54,20 +54,6 @@ redis/cli:
 	docker compose exec -it redis redis-cli -a $(REDIS_PASSWORD)
 
 # ================================================================== #
-# FRONTEND
-# ================================================================== #
-
-## frontend/api/gen: generate types using swagger spec
-.PHONY: frontend/api/gen
-frontend/api/gen:
-	cd frontend && npm run api:gen
-
-## frontend/run/dev: run dev server
-.PHONY: frontend/run/dev
-frontend/run/dev:
-	cd frontend && npm run dev
-
-# ================================================================== #
 # DOCKER
 # ================================================================== #
 
